@@ -1,7 +1,7 @@
 const { QueueServiceClient } = require('@azure/storage-queue');
 const { v4: uuidv4 } = require('uuid');
-const { delay, getQueueClientForSend } = require('./utils');
-const chalk = require('chalk');
+const { delay, getQueueClientForSend } = require('../utils');
+const { logger } = require('../logger');
 
 async function sendMessage(queueClient) {
   const now = new Date();
@@ -13,20 +13,20 @@ async function sendMessage(queueClient) {
     }
   );
 
-  console.log(chalk.green('sendMessage | prepared message', messageString));
+  logger.log(logger.logLevels.INFO, `sendMessage | prepared message ${messageString}`);
 
   const enqueueResponse = await queueClient.sendMessage(messageString);
-  console.log(chalk.greenBright(`sendMessage sent ${messageNumber} inserted ${enqueueResponse.insertedOn.toISOString()}`));
-  console.log(chalk.magentaBright('----------------------------------------------------------------------------------------------------\n'));
+  logger.log(logger.logLevels.OK, `sendMessage | sent ${messageNumber} inserted ${enqueueResponse.insertedOn.toISOString()}`);
+  logger.log(logger.logLevels.DIVIDER);
 }
 
 async function enqueue (queueName) {
   const queueClient = await getQueueClientForSend(queueName);
   if (!queueClient) {
-    console.log(chalk.redBright('enqueue | queueClient is falsey'));
+    logger.log(logger.logLevels.ERROR, 'enqueue | queueClient is falsey');
     return;
   }
-  console.log(chalk.green('enqueue | queueClient is good to go\n'));
+  logger.log(logger.logLevels.INFO, 'enqueue | queueClient is good to go\n');
 
   for (i = 0; i < 3; i++) {
     // random returns a floating point number between 0 and <1

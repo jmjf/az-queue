@@ -3,7 +3,7 @@ require("dotenv").config({ path: 'sample.env'});
 
 const { DefaultAzureCredential } = require('@azure/identity');
 const { QueueServiceClient } = require('@azure/storage-queue');
-const chalk = require('chalk');
+const { logger } = require('./logger');
 
 const TIMEOUT_INCREMENT = parseInt(process.env.TIMEOUT_INCREMENT, 10) || 1000; // 1 second
 const MAX_TIMEOUT = parseInt(process.env.MAX_TIMEOUT, 10) || 10000; // 10 seconds
@@ -18,7 +18,7 @@ function getAzureCredential() {
       !process.env.AZURE_CLIENT_ID ||
       !process.env.AZURE_CLIENT_SECRET
   ) {
-    console.log(chalk.redBright('getAzureCredential | Azure AD authentication data is missing.'));
+    logger.log(logger.logLevels.ERROR, 'getAzureCredential | Azure AD authentication data is missing.');
     return false;
   }
 
@@ -29,7 +29,7 @@ function getQueueServiceClient() {
   // get credentials for the service principal
   const azCredential = getAzureCredential();
   if (!azCredential) {
-    console.log(chalk.redBright('getQueueServiceClient | azCredential is falsey'));
+    logger.log(logger.logLevels.ERROR, 'getQueueServiceClient | azCredential is falsey');
     return;
   }
 
@@ -40,7 +40,7 @@ function getQueueServiceClient() {
     azCredential
   );
   if (!queueServiceClient) {
-    console.log(chalk.redBright('getQueueServiceClient | queueServiceClient is falsey'));
+    logger.log(logger.logLevels.ERROR, 'getQueueServiceClient | queueServiceClient is falsey');
   }
 
   return queueServiceClient;
@@ -66,12 +66,12 @@ async function doesQueueExist(queueServiceClient, queueName) {
 async function createQueueIfNotExists(queueServiceClient, queueName) {
   const exists = await doesQueueExist(queueServiceClient, queueName);
   if (!exists) {
-    console.log(chalk.yellowBright(`createQueueIfNotExists | creating queue ${queueName}\n`));
+    logger.log(logger.logLevels.INFO, `createQueueIfNotExists | creating queue ${queueName}\n`);
     const res = await queueServiceClient.createQueue(queueName);
-    console.log(chalk.yellowBright('createQueueIfNotExists | createQueue response'));
-    console.log(JSON.stringify(res, null, 3));
+    logger.log(logger.logLevels.INFO('createQueueIfNotExists | createQueue response'));
+    logger.log(logger.logLevels.VERBOSE, `\n${JSON.stringify(res, null, 3)}\n`);
   } else {
-    console.log(chalk.green(`createQueueIfNotExists | queue ${queueName} exists\n`));
+    logger.log(logger.logLevels.INFO, `createQueueIfNotExists | queue ${queueName} exists\n`);
   }
   return;
 }
@@ -79,14 +79,14 @@ async function createQueueIfNotExists(queueServiceClient, queueName) {
 async function getQueueClient(queueServiceClient, queueName) {
   const queueClient = queueServiceClient.getQueueClient(queueName);
   if (!queueClient) { 
-    console.log(chalk.redBright('getQueueClient | queueClient is falsey'));
+    logger.log(logger.logLevels.ERROR, 'getQueueClient | queueClient is falsey');
     return false;
   }
   if (await queueClient.exists()) {
-    console.log(chalk.green('getQueueClient | queueClient.exists() is true\n'));
+    logger.log(logger.logLevels.INFO, 'getQueueClient | queueClient.exists() is true\n');
     return queueClient;
   } else {
-    console.log(chalk.redBright('getQueueClient | queueClient.exists() is false'));
+    logger.log(logger.logLevels.ERROR, 'getQueueClient | queueClient.exists() is false');
     return false;
   }
 }
@@ -94,15 +94,15 @@ async function getQueueClient(queueServiceClient, queueName) {
 async function getQueueClientForReceive(queueName) {
   const queueServiceClient = getQueueServiceClient();
   if (!queueServiceClient) {
-    console.log(chalk.red('getQueueClientForReceive | queueServiceClient is falsey'));
+    logger.log(logger.logLevels.ERROR, 'getQueueClientForReceive | queueServiceClient is falsey');
     return false;
   } else {
-    console.log(chalk.green(`getQueueClientForReceive | has queueServiceClient for ${queueServiceClient.url}\n`));
+    logger.log(logger.logLevels.INFO, (`getQueueClientForReceive | have queueServiceClient for ${queueServiceClient.url}\n`));
   }
 
   const exists = await doesQueueExist(queueServiceClient, queueName);
   if (!exists) {
-    console.log(chalk.redBright(`getQueueClientForReceive | queue ${queueName} does not exist`));
+    logger.log(logger.logLevels.ERROR, `getQueueClientForReceive | queue ${queueName} does not exist`);
     return false;
   }
   
@@ -112,10 +112,10 @@ async function getQueueClientForReceive(queueName) {
 async function getQueueClientForSend(queueName) {
   const queueServiceClient = getQueueServiceClient();
   if (!queueServiceClient) {
-    console.log(chalk.red('getQueueClientForSend | queueServiceClient is falsey'));
+    logger.log(logger.logLevels.ERROR, 'getQueueClientForSend | queueServiceClient is falsey');
     return false;
   } else {
-    console.log(chalk.green(`getQueueClientForSend | has queueServiceClient for ${queueServiceClient.url}\n`));
+    logger.log(logger.logLevels.INFO, `getQueueClientForSend | have queueServiceClient for ${queueServiceClient.url}\n`);
   }
   
   await createQueueIfNotExists(queueServiceClient, queueName);
