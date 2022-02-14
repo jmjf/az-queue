@@ -1,9 +1,12 @@
 // Load the .env file if it exists
-require("dotenv").config({ path: '../env/dev.env'});
+require("dotenv").config({ path: 'sample.env'});
 
 const { DefaultAzureCredential } = require('@azure/identity');
 const { QueueServiceClient } = require('@azure/storage-queue');
 const chalk = require('chalk');
+
+const TIMEOUT_INCREMENT = parseInt(process.env.TIMEOUT_INCREMENT, 10) || 1000; // 1 second
+const MAX_TIMEOUT = parseInt(process.env.MAX_TIMEOUT, 10) || 10000; // 10 seconds
 
 // this expression defines a function (delay) that lets us wait
 // for the specified number of milliseconds
@@ -43,6 +46,10 @@ function getQueueServiceClient() {
   return queueServiceClient;
 }
 
+function getTimeout(timeout) {
+  return ((timeout >= MAX_TIMEOUT) ? MAX_TIMEOUT : timeout + TIMEOUT_INCREMENT);
+}
+
 async function doesQueueExist(queueServiceClient, queueName) {
   let found = false;
   const queueIterator = queueServiceClient.listQueues(queueName);
@@ -60,5 +67,6 @@ module.exports = {
   delay,
   doesQueueExist,
   getAzureCredential,
-  getQueueServiceClient
+  getQueueServiceClient,
+  getTimeout
 };

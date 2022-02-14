@@ -1,6 +1,3 @@
-// Load the .env file if it exists
-require("dotenv").config({ path: '../env/dev.env'});
-
 const { QueueServiceClient } = require('@azure/storage-queue');
 const { v4: uuidv4 } = require('uuid');
 const { delay, doesQueueExist, getQueueServiceClient } = require('./utils');
@@ -9,12 +6,12 @@ const chalk = require('chalk');
 async function createQueueIfNotExists(queueServiceClient, queueName) {
   const exists = await doesQueueExist(queueServiceClient, queueName);
   if (!exists) {
-    console.log(chalk.yellowBright(`creating queue ${queueName}\n`));
+    console.log(chalk.yellowBright(`createQueueIfNotExists | creating queue ${queueName}\n`));
     const res = await queueServiceClient.createQueue(queueName);
-    console.log(chalk.yellowBright('createQueue response'));
+    console.log(chalk.yellowBright('createQueueIfNotExists | createQueue response'));
     console.log(JSON.stringify(res, null, 3));
   } else {
-    console.log(chalk.green(`queue ${queueName} exists\n`));
+    console.log(chalk.green(`createQueueIfNotExists | queue ${queueName} exists\n`));
   }
   return;
 }
@@ -29,10 +26,10 @@ async function sendMessage(queueClient) {
     }
   );
 
-  console.log(chalk.green('prepared message', messageString));
+  console.log(chalk.green('sendMessage | prepared message', messageString));
 
   const enqueueResponse = await queueClient.sendMessage(messageString);
-  console.log(chalk.greenBright(`Message ${messageNumber}, inserted ${enqueueResponse.insertedOn.toISOString()}`));
+  console.log(chalk.greenBright(`sendMessage sent ${messageNumber} inserted ${enqueueResponse.insertedOn.toISOString()}`));
   console.log(chalk.magentaBright('----------------------------------------------------------------------------------------------------\n'));
 }
 
@@ -49,13 +46,13 @@ async function enqueue (queueName) {
 
   const queueClient = queueServiceClient.getQueueClient(queueName);
   if (!queueClient) { 
-    console.log(chalk.redBright('queueClient is falsey'));
+    console.log(chalk.redBright('enqueue | queueClient is falsey'));
     return;
   }
   if (await queueClient.exists()) {
-    console.log(chalk.green('queueClient.exists() is true\n'));
+    console.log(chalk.green('enqueue | queueClient.exists() is true\n'));
   } else {
-    console.log(chalk.redBright('queueClient.exists() is false'));
+    console.log(chalk.redBright('enqueue | queueClient.exists() is false'));
     return;
   }
 

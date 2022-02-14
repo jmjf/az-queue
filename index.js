@@ -3,6 +3,7 @@
 // Based on examples from https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/storage/storage-queue/samples/v12/javascript
 
 const { enqueue } = require('./commands/enqueue');
+const { dequeue } = require('./commands/dequeue');
 
 const { program } = require('commander');
 
@@ -17,6 +18,12 @@ async function main() {
     .description('Generate messages and enqueue them to an Azure queue')
     .argument('<queueName>', 'name of queue to send messages to')
     .action((queueName) => { enqueue(queueName) });
+
+  program
+    .command('dequeue')
+    .description('Read messages from an Azure queue and delete them from the queue')
+    .argument('<queueName>', 'name of the queue to read messages from')
+    .action((queueName) => { dequeue(queueName) });
 
   await program.parseAsync(process.argv)
 }
