@@ -1,6 +1,7 @@
 const { QueueServiceClient } = require('@azure/storage-queue');
-const { delay, getQueueClientForReceive, getTimeout } = require('../utils');
-const { logger } = require('../logger');
+const { getQueueClientForReceive } = require('../common/azQueueHelpers');
+const { logger } = require('../common/logger');
+const { delay, getTimeout } = require('../common/misc');
 
 async function receiveMessage(queueClient) {
   const response = await queueClient.receiveMessages();
@@ -19,7 +20,7 @@ async function receiveMessage(queueClient) {
 async function deleteMessage(queueClient, messageId, popReceipt) {
   const deleteResponse = await queueClient.deleteMessage(messageId, popReceipt);
   if (deleteResponse && typeof deleteResponse.errorCode == 'undefined') {
-    logger.log(logger.logLevels.INFO, `deleteMessage | deleted ${messageId} on ${deleteResponse.date}`);
+    logger.log(logger.logLevels.OK, `deleteMessage | deleted ${messageId} on ${deleteResponse.date}`);
   } else {
     logger.log(logger.logLevels.ERROR, `deleteMessage | response for ${messageId} -> ${(deleteResponse) ? deleteResponse.errorCode : 'is falsey'}`);
   }

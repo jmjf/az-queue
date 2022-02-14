@@ -1,7 +1,8 @@
 const { QueueServiceClient } = require('@azure/storage-queue');
 const { v4: uuidv4 } = require('uuid');
-const { delay, getQueueClientForSend } = require('../utils');
-const { logger } = require('../logger');
+const { delay } = require('../common/misc');
+const { getQueueClientForSend } = require('../common/azQueueHelpers');
+const { logger } = require('../common/logger');
 
 async function sendMessage(queueClient) {
   const now = new Date();
