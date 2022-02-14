@@ -1,5 +1,5 @@
 const { QueueServiceClient } = require('@azure/storage-queue');
-const { delay, doesQueueExist, getQueueServiceClient, getTimeout } = require('./utils');
+const { delay, getQueueClientForReceive, getTimeout } = require('./utils');
 const chalk = require('chalk');
 
 async function receiveMessage(queueClient) {
@@ -26,31 +26,12 @@ async function deleteMessage(queueClient, messageId, popReceipt) {
 }
 
 async function dequeue (queueName) {
-  const queueServiceClient = getQueueServiceClient();
-  if (!queueServiceClient) {
-    console.log(chalk.red('dequeue | queueServiceClient is falsey'));
-    return;
-  } else {
-    console.log(chalk.green(`dequeue | has queueServiceClient for ${queueServiceClient.url}\n`));
-  }
-
-  const exists = await doesQueueExist(queueServiceClient, queueName);
-  if (!exists) {
-    console.log(chalk.redBright(`dequeue | queue ${queueName} does not exist`));
-    return;
-  }
-  
-  const queueClient = queueServiceClient.getQueueClient(queueName);
-  if (!queueClient) { 
+  const queueClient = await getQueueClientForReceive(queueName);
+  if (!queueClient) {
     console.log(chalk.redBright('dequeue | queueClient is falsey'));
     return;
   }
-  if (await queueClient.exists()) {
-    console.log(chalk.green('dequeue | queueClient.exists() is true\n'));
-  } else {
-    console.log(chalk.redBright('dequeue | queueClient.exists() is false'));
-    return;
-  }
+  console.log(chalk.green('dequeue | queueClient is good to go\n'));
 
   // loop forever reading the queue
   let timeout = 0;
@@ -66,7 +47,6 @@ async function dequeue (queueName) {
       console.log(chalk.cyan('---------------------------------------------------\n'));
     }
   }
-  
 }
 
 module.exports = { dequeue }

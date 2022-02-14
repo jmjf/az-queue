@@ -1,20 +1,7 @@
 const { QueueServiceClient } = require('@azure/storage-queue');
 const { v4: uuidv4 } = require('uuid');
-const { delay, doesQueueExist, getQueueServiceClient } = require('./utils');
+const { delay, getQueueClientForSend } = require('./utils');
 const chalk = require('chalk');
-
-async function createQueueIfNotExists(queueServiceClient, queueName) {
-  const exists = await doesQueueExist(queueServiceClient, queueName);
-  if (!exists) {
-    console.log(chalk.yellowBright(`createQueueIfNotExists | creating queue ${queueName}\n`));
-    const res = await queueServiceClient.createQueue(queueName);
-    console.log(chalk.yellowBright('createQueueIfNotExists | createQueue response'));
-    console.log(JSON.stringify(res, null, 3));
-  } else {
-    console.log(chalk.green(`createQueueIfNotExists | queue ${queueName} exists\n`));
-  }
-  return;
-}
 
 async function sendMessage(queueClient) {
   const now = new Date();
@@ -34,27 +21,12 @@ async function sendMessage(queueClient) {
 }
 
 async function enqueue (queueName) {
-  const queueServiceClient = getQueueServiceClient();
-  if (!queueServiceClient) {
-    console.log(chalk.red('enqueue | queueServiceClient is falsey'));
-    return;
-  } else {
-    console.log(chalk.green(`enqueue | has queueServiceClient for ${queueServiceClient.url}\n`));
-  }
-  
-  await createQueueIfNotExists(queueServiceClient, queueName);
-
-  const queueClient = queueServiceClient.getQueueClient(queueName);
-  if (!queueClient) { 
+  const queueClient = await getQueueClientForSend(queueName);
+  if (!queueClient) {
     console.log(chalk.redBright('enqueue | queueClient is falsey'));
     return;
   }
-  if (await queueClient.exists()) {
-    console.log(chalk.green('enqueue | queueClient.exists() is true\n'));
-  } else {
-    console.log(chalk.redBright('enqueue | queueClient.exists() is false'));
-    return;
-  }
+  console.log(chalk.green('enqueue | queueClient is good to go\n'));
 
   for (i = 0; i < 3; i++) {
     // random returns a floating point number between 0 and <1

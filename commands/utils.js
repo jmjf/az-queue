@@ -63,10 +63,73 @@ async function doesQueueExist(queueServiceClient, queueName) {
   return found; 
 }
 
+async function createQueueIfNotExists(queueServiceClient, queueName) {
+  const exists = await doesQueueExist(queueServiceClient, queueName);
+  if (!exists) {
+    console.log(chalk.yellowBright(`createQueueIfNotExists | creating queue ${queueName}\n`));
+    const res = await queueServiceClient.createQueue(queueName);
+    console.log(chalk.yellowBright('createQueueIfNotExists | createQueue response'));
+    console.log(JSON.stringify(res, null, 3));
+  } else {
+    console.log(chalk.green(`createQueueIfNotExists | queue ${queueName} exists\n`));
+  }
+  return;
+}
+
+async function getQueueClient(queueServiceClient, queueName) {
+  const queueClient = queueServiceClient.getQueueClient(queueName);
+  if (!queueClient) { 
+    console.log(chalk.redBright('getQueueClient | queueClient is falsey'));
+    return false;
+  }
+  if (await queueClient.exists()) {
+    console.log(chalk.green('getQueueClient | queueClient.exists() is true\n'));
+    return queueClient;
+  } else {
+    console.log(chalk.redBright('getQueueClient | queueClient.exists() is false'));
+    return false;
+  }
+}
+
+async function getQueueClientForReceive(queueName) {
+  const queueServiceClient = getQueueServiceClient();
+  if (!queueServiceClient) {
+    console.log(chalk.red('getQueueClientForReceive | queueServiceClient is falsey'));
+    return false;
+  } else {
+    console.log(chalk.green(`getQueueClientForReceive | has queueServiceClient for ${queueServiceClient.url}\n`));
+  }
+
+  const exists = await doesQueueExist(queueServiceClient, queueName);
+  if (!exists) {
+    console.log(chalk.redBright(`getQueueClientForReceive | queue ${queueName} does not exist`));
+    return false;
+  }
+  
+  return getQueueClient(queueServiceClient, queueName);
+}
+
+async function getQueueClientForSend(queueName) {
+  const queueServiceClient = getQueueServiceClient();
+  if (!queueServiceClient) {
+    console.log(chalk.red('getQueueClientForSend | queueServiceClient is falsey'));
+    return false;
+  } else {
+    console.log(chalk.green(`getQueueClientForSend | has queueServiceClient for ${queueServiceClient.url}\n`));
+  }
+  
+  await createQueueIfNotExists(queueServiceClient, queueName);
+
+  return getQueueClient(queueServiceClient, queueName);
+}
+
 module.exports = {
+  createQueueIfNotExists,
   delay,
   doesQueueExist,
   getAzureCredential,
+  getQueueClientForReceive,
+  getQueueClientForSend,
   getQueueServiceClient,
   getTimeout
 };
