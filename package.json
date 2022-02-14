@@ -1,0 +1,19 @@
+{
+  "name": "az-queue",
+  "version": "1.0.0",
+  "description": "Test azure queues",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/identity": "^2.0.2",
+    "@azure/storage-queue": "^12.7.0",
+    "chalk": "^4.1.2",
+    "commander": "^9.0.0",
+    "dotenv": "^16.0.0",
+    "uuid": "^8.3.2"
+  }
+}
