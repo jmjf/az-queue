@@ -4,6 +4,7 @@
 
 const { sender } = require('./commands/sender');
 const { reader } = require('./commands/reader');
+const { resender } = require('./commands/resender');
 
 const { program } = require('commander');
 
@@ -24,6 +25,13 @@ async function main() {
     .description('Read messages from an Azure queue and delete them from the queue')
     .argument('<queueName>', 'name of the queue to read messages from')
     .action((queueName) => { reader(queueName) });
+
+  program
+    .command('resender')
+    .description('Read messages from a queue, send them to another queue and delete them from the source queue')
+    .argument('<fromQueueName>', `name of the queue to read messages from`)
+    .argument('<toQueueName>', 'name of the queue to send messages to')
+    .action((fromQueueName, toQueueName) => resender(fromQueueName, toQueueName));
 
   await program.parseAsync(process.argv)
 }

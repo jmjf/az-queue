@@ -7,23 +7,35 @@ async function receiveMessage(queueClient) {
   const response = await queueClient.receiveMessages();
   if (response.receivedMessageItems.length == 1) {
     const messageItem = response.receivedMessageItems[0];
-    const message = JSON.parse(messageItem.messageText);
+    //console.log(JSON.stringify(response, null, 4));
+    message = JSON.parse(messageItem.messageText);
 
-    logger.log(logger.logLevels.OK, (`receiveMessage | received messageId ${messageItem.messageId}`));
+    logger.log(logger.logLevels.OK, (`receiveMessage | received messageId ${messageItem.messageId} requestId ${message.requestId}`));
     logger.log(logger.logLevels.VERBOSE, `${messageItem.messageText}`);
-    return messageItem;
+    return { messageItem, requestId: message.requestId };
   }
-  logger.log(logger.logLevels.INFO, 'receivedMessage | no messages');
+  logger.log(logger.logLevels.INFO, 'receiveMessage | no messages');
   return false;
 }
 
 async function deleteMessage(queueClient, messageId, popReceipt) {
   const deleteResponse = await queueClient.deleteMessage(messageId, popReceipt);
   if (deleteResponse && typeof deleteResponse.errorCode == 'undefined') {
-    logger.log(logger.logLevels.OK, `deleteMessage | deleted ${messageId} on ${deleteResponse.date}`);
+    logger.log(logger.logLevels.OK, `deleteMessage | deleted ${messageId} on ${deleteResponse.date.toISOString()}`);
   } else {
     logger.log(logger.logLevels.ERROR, `deleteMessage | response for ${messageId} -> ${(deleteResponse) ? deleteResponse.errorCode : 'is falsey'}`);
   }
+}
+
+async function dequeueMessage(queueClient) {
+  // deleteMessage doesn't seem to accept a client-supplied requestId for tracing, so ignore it here
+  const { messageItem } = await receiveMessage(queueClient);
+    if (messageItem) {
+      // it isn't clearly documented in MS docs, but looking at the code on GitHub, it looks like everything accepts a {clientRequestId} option
+      await deleteMessage(queueClient, messageItem.messageId, messageItem.popReceipt);
+      return true;
+    } // else
+    return false;
 }
 
 async function reader (queueName) {
@@ -37,9 +49,7 @@ async function reader (queueName) {
   // loop forever reading the queue
   let timeout = 0;
   while (true) {
-    const messageItem = await receiveMessage(queueClient);
-    if (messageItem) {
-      await deleteMessage(queueClient, messageItem.messageId, messageItem.popReceipt);
+    if (await dequeueMessage(queueClient,)) {
       timeout = 0;
     } else {
       timeout = getTimeout(timeout);
@@ -50,4 +60,8 @@ async function reader (queueName) {
   }
 }
 
-module.exports = { reader }
+module.exports = { 
+  reader,
+  receiveMessage,
+  deleteMessage 
+}

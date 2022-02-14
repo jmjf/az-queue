@@ -6,19 +6,23 @@ const { logger } = require('../common/logger');
 
 async function sendMessage(queueClient) {
   const now = new Date();
-  const messageNumber = now.valueOf();
-  const messageString = JSON.stringify(
-    { requestId: uuidv4(), 
-      requestDatetime: now.toISOString(), 
-      messageText: `Hello message ${messageNumber}`
-    }
-  );
+  const message = { 
+    requestId: uuidv4(), 
+    requestDatetime: now.toISOString(), 
+    messageText: `Hello message ${now.valueOf}`
+  };
+  const messageString = JSON.stringify(message);
 
   logger.log(logger.logLevels.INFO, `sendMessage | prepared message ${messageString}`);
 
-  const enqueueResponse = await queueClient.sendMessage(messageString);
-  logger.log(logger.logLevels.OK, `sendMessage | sent ${messageNumber} inserted ${enqueueResponse.insertedOn.toISOString()}`);
-  logger.log(logger.logLevels.DIVIDER);
+  const sendResponse = await queueClient.sendMessage(messageString, {requestId: message.requestId});
+  if (sendResponse._response.status == 201) {
+    logger.log(logger.logLevels.OK, `sendMessage | sent ${sendResponse.messageId} inserted at ${sendResponse.insertedOn.toISOString()} clientRequestId ${sendResponse.clientRequestId}`);
+    return true;
+  } //else
+  logger.log(logger.logLevels.ERROR, `status ${sendResponse.request.status}`);
+  logger.log(logger.logLevels.INFO, JSON.stringify(sendResponse.request.operationSpec.responses));
+  return false;
 }
 
 async function sender(queueName) {
@@ -36,6 +40,7 @@ async function sender(queueName) {
     const msDelay = ((Math.floor(Math.random() * 6) + 2) * 1000)
     await delay(msDelay)
     await sendMessage(queueClient);
+    logger.log(logger.logLevels.DIVIDER);
   }
 }
 

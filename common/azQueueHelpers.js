@@ -1,5 +1,5 @@
 // Load the .env file if it exists
-require("dotenv").config({ path: 'sample.env'});
+require("dotenv").config({ path: './env/dev.env'});
 
 const { QueueServiceClient } = require('@azure/storage-queue');
 const { getAzureCredential } = require('./azHelpers');
@@ -44,7 +44,7 @@ async function createQueueIfNotExists(queueServiceClient, queueName) {
   if (!exists) {
     logger.log(logger.logLevels.INFO, `createQueueIfNotExists | creating queue ${queueName}\n`);
     const res = await queueServiceClient.createQueue(queueName);
-    logger.log(logger.logLevels.INFO('createQueueIfNotExists | createQueue response'));
+    logger.log(logger.logLevels.INFO, 'createQueueIfNotExists | createQueue response');
     logger.log(logger.logLevels.VERBOSE, `\n${JSON.stringify(res, null, 3)}\n`);
   } else {
     logger.log(logger.logLevels.INFO, `createQueueIfNotExists | queue ${queueName} exists\n`);

@@ -1,5 +1,5 @@
 // Load the .env file if it exists
-require("dotenv").config({ path: 'sample.env'});
+require("dotenv").config({ path: './env/dev.env'});
 
 const { DefaultAzureCredential } = require('@azure/identity');
 const { logger } = require('./logger');
