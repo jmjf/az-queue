@@ -2,11 +2,11 @@
 
 // Based on examples from https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/storage/storage-queue/samples/v12/javascript
 
-const { sender } = require('./commands/sender');
-const { reader } = require('./commands/reader');
-const { resender } = require('./commands/resender');
+import { sender } from './commands/sender';
+import { reader } from './commands/reader';
+import { resender } from './commands/resender';
 
-const { program } = require('commander');
+import { program } from 'commander';
 
 async function main() {
   program
@@ -18,20 +18,20 @@ async function main() {
     .command('sender')
     .description('Generate messages and send them to an Azure queue')
     .argument('<queueName>', 'name of queue to send messages to')
-    .action((queueName) => { sender(queueName) });
+    .action((queueName:string) => { sender(queueName) });
 
   program
     .command('reader')
     .description('Read messages from an Azure queue and delete them from the queue')
     .argument('<queueName>', 'name of the queue to read messages from')
-    .action((queueName) => { reader(queueName) });
+    .action((queueName:string ) => { reader(queueName) });
 
   program
     .command('resender')
     .description('Read messages from a queue, send them to another queue and delete them from the source queue')
     .argument('<fromQueueName>', `name of the queue to read messages from`)
     .argument('<toQueueName>', 'name of the queue to send messages to')
-    .action((fromQueueName, toQueueName) => resender(fromQueueName, toQueueName));
+    .action((fromQueueName: string, toQueueName: string) => resender(fromQueueName, toQueueName));
 
   await program.parseAsync(process.argv)
 }

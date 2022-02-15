@@ -1,0 +1,4 @@
+{
+  "ignorePatterns": ["eslintrc.js", "dist/**/*"],
+  "rules": {}
+}
