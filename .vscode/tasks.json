@@ -6,9 +6,19 @@
       "command": "host start",
       "problemMatcher": "$func-node-watch",
       "isBackground": true,
-      "dependsOn": "npm install (functions)",
+      "dependsOn": "npm build (functions)",
       "options": {
-        "cwd": "${workspaceFolder}/azFunctions"
+        "cwd": "${workspaceFolder}/AzFunctions"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "npm build (functions)",
+      "command": "npm run build",
+      "dependsOn": "npm install (functions)",
+      "problemMatcher": "$tsc",
+      "options": {
+        "cwd": "${workspaceFolder}/AzFunctions"
       }
     },
     {
@@ -16,16 +26,17 @@
       "label": "npm install (functions)",
       "command": "npm install",
       "options": {
-        "cwd": "${workspaceFolder}/azFunctions"
+        "cwd": "${workspaceFolder}/AzFunctions"
       }
     },
     {
       "type": "shell",
       "label": "npm prune (functions)",
       "command": "npm prune --production",
+      "dependsOn": "npm build (functions)",
       "problemMatcher": [],
       "options": {
-        "cwd": "${workspaceFolder}/azFunctions"
+        "cwd": "${workspaceFolder}/AzFunctions"
       }
     }
   ]

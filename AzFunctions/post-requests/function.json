@@ -1,0 +1,26 @@
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "post"
+      ]
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "name": "requestsQueueItem",
+      "direction": "out",
+      "type": "queue",
+      "connection": "jmk01queues_STORAGE",
+      "queueName": "requestsqueue"
+    }
+  ],
+  "scriptFile": "../dist/post-requests/index.js"
+}

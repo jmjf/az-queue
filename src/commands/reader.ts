@@ -9,9 +9,10 @@ async function receiveMessage(queueClient: QueueClient): Promise<DequeuedMessage
   if (response.receivedMessageItems.length == 1) {
     const messageItem = response.receivedMessageItems[0];
     //console.log(JSON.stringify(response, null, 4));
-    const message = <RequestMessage>JSON.parse(messageItem.messageText);
+    //logger.log(logger.LogLevels.INFO, Buffer.from(messageItem.messageText, 'base64').toString());
+    const message = <RequestMessage>JSON.parse(Buffer.from(messageItem.messageText, 'base64').toString());
     logger.log(logger.LogLevels.OK, (`receiveMessage | received messageId ${messageItem.messageId} requestId ${message.requestId}`));
-    logger.log(logger.LogLevels.VERBOSE, `${messageItem.messageText}`);
+    logger.log(logger.LogLevels.VERBOSE, `${Buffer.from(messageItem.messageText, 'base64').toString()}`);
 
     return messageItem;
   }

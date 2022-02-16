@@ -3,10 +3,17 @@
 # secrets
 /env
 
+# Azure Functions artifacts
+bin
+obj
+appsettings.json
+local.settings.json
+
 # compiled output
 /dist
 /tmp
 /out-tsc
+/AzFunctions/dist
 
 # Only exists if Bazel was run
 /bazel-out
