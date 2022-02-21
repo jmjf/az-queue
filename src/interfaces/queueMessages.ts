@@ -10,7 +10,14 @@ interface ResendMessage {
   messageText: string
 }
 
+interface FunctionRequestMessage {
+  apiVersion: string,
+  requesterId: string,
+  messageText: string
+}
+
 export {
   RequestMessage,
-  ResendMessage
+  ResendMessage,
+  FunctionRequestMessage
 };
