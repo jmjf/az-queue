@@ -27,7 +27,7 @@ function log(logLevel: LogLevels, message?: string): void {
       console.log(chalk.yellow(`WARN | ${now.toISOString()} | ${message}`));
       break;
     case LogLevels.ERROR:
-      console.log(chalk.redBright(`\nWARN | ${now.toISOString()} | ${message}\n`));
+      console.log(chalk.redBright(`\nERROR | ${now.toISOString()} | ${message}\n`));
       break;
     case LogLevels.DIVIDER:
       console.log(chalk.magentaBright(`\n${'-'.repeat(50)}\n`));
