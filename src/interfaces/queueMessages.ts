@@ -4,7 +4,7 @@ interface RequestMessage {
   messageText: string
 }
 
-interface ResendMessage {
+interface PreparedMessage {
   interfaceVersion: string,
   relayDatetime: string,
   messageText: string
@@ -18,6 +18,6 @@ interface FunctionRequestMessage {
 
 export {
   RequestMessage,
-  ResendMessage,
+  PreparedMessage,
   FunctionRequestMessage
 };

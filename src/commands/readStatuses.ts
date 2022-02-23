@@ -6,7 +6,7 @@ import { RequestMessage } from '../interfaces/queueMessages';
 
 async function receiveMessage(queueClient: QueueClient): Promise<DequeuedMessageItem> {
   const response = await queueClient.receiveMessages();
-  if (response.receivedMessageItems.length == 1) {
+    if (response.receivedMessageItems.length == 1) {
     const messageItem = response.receivedMessageItems[0];
     //console.log(JSON.stringify(response, null, 4));
     //logger.log(logger.LogLevels.INFO, Buffer.from(messageItem.messageText, 'base64').toString());
@@ -41,13 +41,13 @@ async function dequeueMessage(queueClient: QueueClient): Promise<boolean> {
     return false;
 }
 
-async function reader (queueName: string): Promise<void> {
-  const queueClient = await getQueueClientForReceive(queueName);
+async function readStatuses (completedStatusQueueName: string): Promise<void> {
+  const queueClient = await getQueueClientForReceive(completedStatusQueueName);
   if (!queueClient) {
-    logger.log(logger.LogLevels.ERROR, 'reader | queueClient is falsey');
+    logger.log(logger.LogLevels.ERROR, 'readStatuses | queueClient is falsey');
     return;
   }
-  logger.log(logger.LogLevels.INFO, 'reader | queueClient is good to go\n');
+  logger.log(logger.LogLevels.INFO, 'readStatuses | queueClient is good to go\n');
 
   let timeout = 0;
   // timeout should never reach MAX_SAFE_INTEGER, so this should be infinite
@@ -57,7 +57,7 @@ async function reader (queueName: string): Promise<void> {
       timeout = 0;
     } else {
       timeout = getTimeout(timeout);
-      logger.log(logger.LogLevels.INFO, `reader | no message received, waiting ${timeout} ms`);
+      logger.log(logger.LogLevels.INFO, `readStatuses | no message received, waiting ${timeout} ms`);
       await delay(timeout);
     }
     logger.log(logger.LogLevels.DIVIDER);
@@ -65,7 +65,7 @@ async function reader (queueName: string): Promise<void> {
 }
 
 export { 
-  reader,
-  receiveMessage,
+  readStatuses,
+  receiveMessage as receiveMessage,
   deleteMessage 
 }
