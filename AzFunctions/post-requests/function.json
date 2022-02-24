@@ -18,7 +18,7 @@
       "direction": "out",
       "type": "queue",
       "connection": "jmk01queues_STORAGE",
-      "queueName": "requestsqueue"
+      "queueName": "received-requests"
     }
   ],
   "scriptFile": "../dist/post-requests/index.js"
