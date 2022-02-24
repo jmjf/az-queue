@@ -1,6 +1,6 @@
-import postRequests from '../index';
-import { getDefaultContext } from '../../__test-utils__/defaultContext';
-import { supportedApiVersions } from '../../supportedApiVersions';
+import postRequests from './index';
+import { getDefaultContext } from '../testUtils';
+import { supportedApiVersions } from '../supportedApiVersions';
 
 test('postRequests should return 200 for good request', async () => {
   const context = getDefaultContext();
