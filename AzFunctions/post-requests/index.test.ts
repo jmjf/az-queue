@@ -1,5 +1,5 @@
 import postRequests from './index';
-import { getDefaultContext } from '../testUtils';
+import { getDefaultContext } from '../testUtils/getDefaultContext';
 import { supportedApiVersions } from '../supportedApiVersions';
 
 test('postRequests should return 200 for good request', async () => {
