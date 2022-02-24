@@ -1,13 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { v4 as uuidv4 } from 'uuid';
+import { supportedApiVersions } from "../supportedApiVersions";
 
 // If I need a GET, PUT, DELETE, add new functions in separate directories
 // ensure their functions.json handles only the specific method they support
 // ensure they specify route: requests in function.json
-const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
+const postRequests: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     const now = new Date();
-    const fnName = 'requests';
-    const supportedApiVersions = ['2022-02-12', '2022-02-15'];
+    const fnName = 'postRequests';
     let httpStatus = 0;
     context.log(`INFO | ${fnName} | received request`);
 
@@ -73,5 +73,5 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     context.done();
 };
 
-export default httpTrigger;
+export default postRequests;
 
