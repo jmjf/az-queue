@@ -21,5 +21,5 @@
       "queueName": "received-requests"
     }
   ],
-  "scriptFile": "../dist/post-requests/index.js"
+  "scriptFile": "../dist/postRequests/index.js"
 }

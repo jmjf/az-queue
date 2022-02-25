@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import { v4 as uuidv4 } from 'uuid';
-import { supportedApiVersions } from "../supportedApiVersions";
+import { requestApiVersions } from "../supportedApiVersions";
 
 // If I need a GET, PUT, DELETE, add new functions in separate directories
 // ensure their functions.json handles only the specific method they support
@@ -20,7 +20,7 @@ const postRequests: AzureFunction = async function (context: Context, req: HttpR
         httpStatus = 400;
     } else {
         // we have a body (data payload) and API version
-        if (!supportedApiVersions.includes(req.body.apiVersion)) {
+        if (!requestApiVersions.includes(req.body.apiVersion)) {
             context.log(`ERROR | ${fnName} | invalid apiVersion ${req.body.apiVersion}`);
             httpStatus = 400;
         } else {

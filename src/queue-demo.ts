@@ -14,12 +14,12 @@ import { log, LogLevels } from './common/logger';
 import { program } from 'commander';
 
 async function main() {
-  const receivedRequestsQueueName = process.env.RECEIVED_QUEUE_NAME || '';
-  const preparedRequestsQueueName = process.env.PREPARED_QUEUE_NAME || '';
-  const completedStatusQueueName = process.env.STATUS_QUEUE_NAME || '';
-  if ( receivedRequestsQueueName.length < 1 ||
-       preparedRequestsQueueName.length < 1 ||
-       completedStatusQueueName.length < 1
+  const receivedQueueName = process.env.RECEIVED_QUEUE_NAME || '';
+  const preparedQueueName = process.env.PREPARED_QUEUE_NAME || '';
+  const statusQueueName = process.env.STATUS_QUEUE_NAME || '';
+  if ( receivedQueueName.length < 1 ||
+       preparedQueueName.length < 1 ||
+       statusQueueName.length < 1
       ) {
     log(LogLevels.ERROR, `main | missing one or more queue names in environment`);
     return;
@@ -39,13 +39,12 @@ async function main() {
   program
     .command('read-statuses')
     .description('Read messages from an Azure queue and delete them from the queue')
-    .argument('<queueName>', 'name of the queue to read messages from')
-    .action((queueName:string ) => { readStatuses(completedStatusQueueName) });
+    .action(() => { readStatuses(statusQueueName) });
 
   program
     .command('prepare-requests')
     .description('Read messages from the received queue, prepare them, publish to the prepared queue, delete them from the received queue')
-    .action(() => { prepareRequests(receivedRequestsQueueName, preparedRequestsQueueName) } );
+    .action(() => { prepareRequests(receivedQueueName, preparedQueueName) } );
 
   await program.parseAsync(process.argv)
 }

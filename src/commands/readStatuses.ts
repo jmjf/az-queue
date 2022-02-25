@@ -12,7 +12,7 @@ async function receiveMessage(queueClient: QueueClient): Promise<DequeuedMessage
     //logger.log(logger.LogLevels.INFO, Buffer.from(messageItem.messageText, 'base64').toString());
     const message = <RequestMessage>JSON.parse(Buffer.from(messageItem.messageText, 'base64').toString());
     logger.log(logger.LogLevels.OK, (`receiveMessage | received messageId ${messageItem.messageId} requestId ${message.requestId}`));
-    logger.log(logger.LogLevels.VERBOSE, `${Buffer.from(messageItem.messageText, 'base64').toString()}`);
+    // logger.log(logger.LogLevels.VERBOSE, Buffer.from(messageItem.messageText, 'base64').toString());
 
     return messageItem;
   }

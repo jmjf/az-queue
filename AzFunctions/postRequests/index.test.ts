@@ -1,12 +1,12 @@
 import postRequests from './index';
 import { getDefaultContext } from '../__testUtils/getDefaultContext';
-import { supportedApiVersions } from '../supportedApiVersions';
+import { requestApiVersions } from '../supportedApiVersions';
 
 test('postRequests should return 200 for good request', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       requesterId: 'test123',
       messageText: 'test message'
     }
@@ -61,7 +61,7 @@ test('postRequests should return 400 for requesterId missing', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       messageText: 'test message'
     }
   };
@@ -75,7 +75,7 @@ test('postRequests should return 400 for requesterId empty', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       requesterId: '',
       messageText: 'test message'
     }
@@ -90,7 +90,7 @@ test('postRequests should return 400 for requesterId not string', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       requesterId: 1,
       messageText: 'test message'
     }
@@ -105,7 +105,7 @@ test('postRequests should return 400 for messageText missing', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       requesterId: 'test123',
     }
   };
@@ -119,7 +119,7 @@ test('postRequests should return 400 for messageText empty', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       requesterId: 'test123',
       messageText: ''
     }
@@ -134,7 +134,7 @@ test('postRequests should return 400 for messageText not string', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
-      apiVersion: supportedApiVersions[0],
+      apiVersion: requestApiVersions[0],
       requesterId: 'test123',
       messageText: 1
     }

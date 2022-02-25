@@ -1,0 +1,19 @@
+{
+  "bindings": [
+    {
+      "name": "preparedItem",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "prepared-requests",
+      "connection": "jmk01queues_STORAGE"
+    },
+    {
+      "name": "statusItem",
+      "direction": "out",
+      "type": "queue",
+      "connection": "jmk01queues_STORAGE",
+      "queueName": "process-statuses"
+    }
+  ],
+  "scriptFile": "../dist/processRequests/index.js"
+}
