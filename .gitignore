@@ -13,7 +13,7 @@ local.settings.json
 /dist
 /tmp
 /out-tsc
-/AzFunctions/dist
+/api/dist
 
 # Only exists if Bazel was run
 /bazel-out
