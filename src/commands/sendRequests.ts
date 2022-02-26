@@ -3,9 +3,6 @@ import { delay } from '../common/misc';
 import * as logger from '../common/logger';
 import { FunctionRequestMessage } from '../interfaces/queueMessages';
 
-import dotenv from 'dotenv';
-dotenv.config({ path: './env/dev.env'});
-
 async function sendMessage(requestsUrl: string, postRequestsKey: string): Promise<boolean> {
   const now: Date = new Date();
   const message: FunctionRequestMessage = { 

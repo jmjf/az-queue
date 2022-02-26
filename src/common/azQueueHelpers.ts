@@ -1,7 +1,3 @@
-// Load the .env file if it exists
-import dotenv from 'dotenv';
-dotenv.config({ path: './env/dev.env'});
-
 import { QueueClient, QueueServiceClient } from '@azure/storage-queue';
 import { getAzureCredential } from './azHelpers';
 import * as logger from './logger';
@@ -15,9 +11,14 @@ function getQueueServiceClient(): QueueServiceClient | void {
   }
 
   // get a QueueServiceClient on the storage account
-  const storageAccountName = process.env.ACCOUNT_NAME || '';
+  const accountUri = process.env.ACCOUNT_URI || '';
+  if (accountUri.length === 0) {
+    logger.log(logger.LogLevels.ERROR, `ACCOUNT_URI is falsey or empty`);
+    return;
+  }
+
   const queueServiceClient = new QueueServiceClient(
-    `https://${storageAccountName}.queue.core.windows.net`,
+    accountUri,
     azCredential
   );
   if (!queueServiceClient) {

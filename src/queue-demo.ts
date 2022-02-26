@@ -4,7 +4,6 @@
 
 // Load the .env file if it exists
 import dotenv from 'dotenv';
-dotenv.config({ path: './env/dev.env'});
 
 import { sendRequests } from './commands/sendRequests';
 import { readStatuses } from './commands/readStatuses';
@@ -14,6 +13,19 @@ import { log, LogLevels } from './common/logger';
 import { program } from 'commander';
 
 async function main() {
+  if (!process.env.APP_ENV) {
+    log(LogLevels.ERROR, `main | APP_ENV is falsey`);
+    return;
+  }
+  
+  log(LogLevels.INFO, `main | APP_ENV ${process.env.APP_ENV}`);
+  dotenv.config({ path: `./env/${process.env.APP_ENV}.env`});
+
+  if (!process.env.ACCOUNT_URI || process.env.ACCOUNT_URI.length === 0) {
+    log(LogLevels.ERROR, `ACCOUNT_URI is falsey or empty`);
+    return;
+  }
+  
   const receivedQueueName = process.env.RECEIVED_QUEUE_NAME || '';
   const preparedQueueName = process.env.PREPARED_QUEUE_NAME || '';
   const statusQueueName = process.env.STATUS_QUEUE_NAME || '';

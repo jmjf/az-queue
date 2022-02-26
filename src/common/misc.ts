@@ -1,7 +1,3 @@
-// Load the .env file if it exists
-import dotenv from 'dotenv';
-dotenv.config({ path: '../env/dev.env'});
-
 const TIMEOUT_INCREMENT = parseInt(<string>process.env.TIMEOUT_INCREMENT, 10) || 1000; // 1 second
 const MAX_TIMEOUT = parseInt(<string>process.env.MAX_TIMEOUT, 10) || 10000; // 10 seconds
 

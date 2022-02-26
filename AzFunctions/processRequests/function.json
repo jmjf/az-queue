@@ -4,14 +4,14 @@
       "name": "preparedItem",
       "type": "queueTrigger",
       "direction": "in",
-      "queueName": "prepared-requests",
-      "connection": "jmk01queues_STORAGE"
+      "connection": "queue_demo_storage",
+      "queueName": "prepared-requests"
     },
     {
       "name": "statusItem",
       "direction": "out",
       "type": "queue",
-      "connection": "jmk01queues_STORAGE",
+      "connection": "queue_demo_storage",
       "queueName": "process-statuses"
     }
   ],
