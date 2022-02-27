@@ -8,21 +8,22 @@ import dotenv from 'dotenv';
 import { sendRequests } from './commands/sendRequests';
 import { readStatuses } from './commands/readStatuses';
 import { prepareRequests } from './commands/prepareRequests';
-import { log, LogLevels } from './common/logger';
+import { Logger } from './lib/Logger';
 
 import { program } from 'commander';
 
 async function main() {
+  const log = new Logger();
   if (!process.env.APP_ENV) {
-    log(LogLevels.ERROR, `main | APP_ENV is falsey`);
+    log.error(`main | APP_ENV is falsey`);
     return;
   }
   
-  log(LogLevels.INFO, `main | APP_ENV ${process.env.APP_ENV}`);
+  log.info(`main | APP_ENV ${process.env.APP_ENV}`);
   dotenv.config({ path: `./env/${process.env.APP_ENV}.env`});
 
   if (!process.env.ACCOUNT_URI || process.env.ACCOUNT_URI.length === 0) {
-    log(LogLevels.ERROR, `ACCOUNT_URI is falsey or empty`);
+    log.error(`ACCOUNT_URI is falsey or empty`);
     return;
   }
   
@@ -33,7 +34,7 @@ async function main() {
        preparedQueueName.length < 1 ||
        statusQueueName.length < 1
       ) {
-    log(LogLevels.ERROR, `main | missing one or more queue names in environment`);
+    log.error(`main | missing one or more queue names in environment`);
     return;
   }
 

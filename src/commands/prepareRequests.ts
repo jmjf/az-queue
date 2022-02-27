@@ -1,10 +1,11 @@
 import { DequeuedMessageItem, QueueClient } from '@azure/storage-queue';
 import { getQueueClientForReceive, getQueueClientForSend } from '../common/azQueueHelpers';
-import * as logger from '../common/logger';
+import { Logger } from '../lib/Logger';
 import { delay, getTimeout } from '../common/misc';
 import { RequestMessage, PreparedMessage } from '../interfaces/queueMessages';
 import { receiveMessage, deleteMessage } from './readStatuses';
 
+const log = new Logger();
 
 async function publishPreparedMessage(toQueueClient: QueueClient, messageItem: DequeuedMessageItem): Promise<boolean> {
   const now = new Date()
@@ -18,33 +19,33 @@ async function publishPreparedMessage(toQueueClient: QueueClient, messageItem: D
 
   const messageString = JSON.stringify(message);
 
-  logger.log(logger.LogLevels.INFO, `publishPreparedMessage | prepared message ${messageString}`);
+  log.info(`publishPreparedMessage | prepared message ${messageString}`);
 
   // the message needs to be base64 to make the queue trigger happy (for now)
   const sendResponse = await toQueueClient.sendMessage(Buffer.from(messageString).toString('base64'), {requestId: receivedMessage.requestId});
   if (sendResponse._response.status == 201) {
-    logger.log(logger.LogLevels.OK, `publishPreparedMessage | sent ${sendResponse.messageId} inserted at ${sendResponse.insertedOn.toISOString()} clientRequestId ${sendResponse.clientRequestId}`);
+    log.ok(`publishPreparedMessage | sent ${sendResponse.messageId} inserted at ${sendResponse.insertedOn.toISOString()} clientRequestId ${sendResponse.clientRequestId}`);
     return true;
   } //else
-  logger.log(logger.LogLevels.ERROR, `publishPreparedMessage | status ${sendResponse._response.status}`);
-  logger.log(logger.LogLevels.INFO, JSON.stringify(sendResponse._response.request.operationSpec?.responses));
+  log.error(`publishPreparedMessage | status ${sendResponse._response.status}`);
+  log.info(JSON.stringify(sendResponse._response.request.operationSpec?.responses));
   return false;
 }
 
 async function prepareRequests (receivedRequestsQueueName: string, preparedRequestsQueueName: string): Promise<void> {
   const fromQueueClient = await getQueueClientForReceive(receivedRequestsQueueName);
   if (!fromQueueClient) {
-    logger.log(logger.LogLevels.ERROR, 'prepareRequests | fromQueueClient is falsey');
+    log.error(`prepareRequests | fromQueueClient is falsey`);
     return;
   }
-  logger.log(logger.LogLevels.INFO, 'prepareRequests | fromQueueClient is good to go\n');
+  log.info(`prepareRequests | fromQueueClient is good to go\n`);
 
   const toQueueClient = await getQueueClientForSend(preparedRequestsQueueName);
   if (!toQueueClient) {
-    logger.log(logger.LogLevels.ERROR, 'prepareRequests | toQueueClient is falsey');
+    log.error(`prepareRequests | toQueueClient is falsey`);
     return;
   }
-  logger.log(logger.LogLevels.INFO, 'prepareRequests | toQueueClient is good to go\n');
+  log.info(`prepareRequests | toQueueClient is good to go\n`);
 
   let timeout = 0;
   // condition should never be true; avoid an eslint hint to escape an error
@@ -57,10 +58,10 @@ async function prepareRequests (receivedRequestsQueueName: string, preparedReque
       }
     } else {
       timeout = getTimeout(timeout);
-      logger.log(logger.LogLevels.INFO, `prepareRequests | no message received, waiting ${timeout} ms`);
+      log.info(`prepareRequests | no message received, waiting ${timeout} ms`);
       await delay(timeout);
     }
-    logger.log(logger.LogLevels.DIVIDER);
+    log.divider();
   }
   return;
 }

@@ -1,19 +1,21 @@
 import { QueueClient, QueueServiceClient } from '@azure/storage-queue';
 import { getAzureCredential } from './azHelpers';
-import * as logger from './logger';
+import { Logger } from '../lib/Logger';
+
+const log = new Logger();
 
 function getQueueServiceClient(): QueueServiceClient | void {
   // get credentials for the service principal
   const azCredential = getAzureCredential();
   if (!azCredential) {
-    logger.log(logger.LogLevels.ERROR, 'getQueueServiceClient | azCredential is falsey');
+    log.error(`getQueueServiceClient | azCredential is falsey`);
     return;
   }
 
   // get a QueueServiceClient on the storage account
   const accountUri = process.env.ACCOUNT_URI || '';
   if (accountUri.length === 0) {
-    logger.log(logger.LogLevels.ERROR, `ACCOUNT_URI is falsey or empty`);
+    log.error(`ACCOUNT_URI is falsey or empty`);
     return;
   }
 
@@ -22,7 +24,7 @@ function getQueueServiceClient(): QueueServiceClient | void {
     azCredential
   );
   if (!queueServiceClient) {
-    logger.log(logger.LogLevels.ERROR, 'getQueueServiceClient | queueServiceClient is falsey');
+    log.error(`getQueueServiceClient | queueServiceClient is falsey`);
   }
 
   return queueServiceClient;
@@ -46,12 +48,12 @@ async function doesQueueExist(queueServiceClient: QueueServiceClient, queueName:
 async function createQueueIfNotExists(queueServiceClient: QueueServiceClient, queueName: string): Promise<void> {
   const exists = await doesQueueExist(queueServiceClient, queueName);
   if (!exists) {
-    logger.log(logger.LogLevels.INFO, `createQueueIfNotExists | creating queue ${queueName}\n`);
+    log.info(`createQueueIfNotExists | creating queue ${queueName}\n`);
     const res = await queueServiceClient.createQueue(queueName);
-    logger.log(logger.LogLevels.INFO, 'createQueueIfNotExists | createQueue response');
-    logger.log(logger.LogLevels.VERBOSE, `\n${JSON.stringify(res, null, 3)}\n`);
+    log.info(`createQueueIfNotExists | createQueue response`);
+    log.info(`\n${JSON.stringify(res, null, 3)}\n`);
   } else {
-    logger.log(logger.LogLevels.INFO, `createQueueIfNotExists | queue ${queueName} exists\n`);
+    log.info(`createQueueIfNotExists | queue ${queueName} exists\n`);
   }
   return;
 }
@@ -59,14 +61,14 @@ async function createQueueIfNotExists(queueServiceClient: QueueServiceClient, qu
 async function getQueueClient(queueServiceClient: QueueServiceClient, queueName: string): Promise<QueueClient> {
   const queueClient = queueServiceClient.getQueueClient(queueName);
   if (!queueClient) { 
-    logger.log(logger.LogLevels.ERROR, 'getQueueClient | queueClient is falsey');
+    log.error(`getQueueClient | queueClient is falsey`);
     return <QueueClient><unknown>null;
   }
   if (await queueClient.exists()) {
-    logger.log(logger.LogLevels.INFO, 'getQueueClient | queueClient.exists() is true\n');
+    log.info(`getQueueClient | queueClient.exists() is true\n`);
     return queueClient;
   } else {
-    logger.log(logger.LogLevels.ERROR, 'getQueueClient | queueClient.exists() is false');
+    log.error(`getQueueClient | queueClient.exists() is false`);
     return <QueueClient><unknown>null;
   }
 }
@@ -74,15 +76,15 @@ async function getQueueClient(queueServiceClient: QueueServiceClient, queueName:
 async function getQueueClientForReceive(queueName: string): Promise<QueueClient> {
   const queueServiceClient = getQueueServiceClient();
   if (!queueServiceClient) {
-    logger.log(logger.LogLevels.ERROR, 'getQueueClientForReceive | queueServiceClient is falsey');
+    log.error(`getQueueClientForReceive | queueServiceClient is falsey`);
     return <QueueClient><unknown>null;
   } else {
-    logger.log(logger.LogLevels.INFO, (`getQueueClientForReceive | have queueServiceClient for ${queueServiceClient.url}\n`));
+    log.info(`getQueueClientForReceive | have queueServiceClient for ${queueServiceClient.url}\n`);
   }
 
   const exists = await doesQueueExist(queueServiceClient, queueName);
   if (!exists) {
-    logger.log(logger.LogLevels.ERROR, `getQueueClientForReceive | queue ${queueName} does not exist`);
+    log.error(`getQueueClientForReceive | queue ${queueName} does not exist`);
     return <QueueClient><unknown>null;
   }
   
@@ -92,10 +94,10 @@ async function getQueueClientForReceive(queueName: string): Promise<QueueClient>
 async function getQueueClientForSend(queueName: string): Promise<QueueClient> {
   const queueServiceClient = getQueueServiceClient();
   if (!queueServiceClient) {
-    logger.log(logger.LogLevels.ERROR, 'getQueueClientForSend | queueServiceClient is falsey');
+    log.error(`getQueueClientForSend | queueServiceClient is falsey`);
     return <QueueClient><unknown>null;
   } else {
-    logger.log(logger.LogLevels.INFO, `getQueueClientForSend | have queueServiceClient for ${queueServiceClient.url}\n`);
+    log.info(`getQueueClientForSend | have queueServiceClient for ${queueServiceClient.url}\n`);
   }
   
   await createQueueIfNotExists(queueServiceClient, queueName);
