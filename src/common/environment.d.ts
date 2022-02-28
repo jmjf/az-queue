@@ -13,8 +13,6 @@ declare global {
       HTTP_PROXY?: string
       MAX_TIMEOUT: string,
       TIMEOUT_INCREMENT: string
-      MAX_TIMEOUT: string,
-      TIMEOUT_INCREMENT: string,
       RECEIVED_QUEUE_NAME: string,
       PREPARED_QUEUE_NAME: string,
       STATUS_QUEUE_NAME: string,
