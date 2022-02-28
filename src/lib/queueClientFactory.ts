@@ -1,5 +1,6 @@
 import { DefaultAzureCredential } from '@azure/identity';
 import { StorageSharedKeyCredential, QueueClient } from '@azure/storage-queue';
+import { QDEnvironmentError, QDResourceError } from './QueueDemoError';
 import { IProcessEnv } from './ProcessEnv';
 import { Logger } from './Logger';
 
@@ -12,7 +13,7 @@ function getAuthMethod(env: IProcessEnv): string {
 
   if (authMethod.length === 0) {
     log.error(`${fnName} | env.AUTH_METHOD is falsey or empty`);
-    return '';
+    throw new QDEnvironmentError(`${fnName} | env.AUTH_METHOD is falsey or empty`);
   }
 
   return authMethod;
@@ -25,7 +26,7 @@ function getSharedKeyCredential(env: IProcessEnv): StorageSharedKeyCredential {
 
   if (accountName.length === 0 || accountKey.length === 0) {
     log.error(`${fnName} | sharedkey authentication environment variables missing`);
-    return <StorageSharedKeyCredential><unknown>null;
+    throw new QDEnvironmentError(`${fnName} | sharedkey authentication environment variables missing`);
   }
 
   return new StorageSharedKeyCredential(accountName, accountKey);
@@ -39,8 +40,8 @@ function getAdCredential(env: IProcessEnv): DefaultAzureCredential {
       !env.AZURE_CLIENT_ID ||
       !env.AZURE_CLIENT_SECRET)
   {
-    log.error(`${fnName} | ad authentication environment variables missing`);
-    return <DefaultAzureCredential><unknown>null;
+    log.error(`${fnName} | sharedkey authentication environment variables missing`);
+    throw new QDEnvironmentError(`${fnName} | sharedkey authentication environment variables missing`);
   }
   return new DefaultAzureCredential();
 }
@@ -58,7 +59,7 @@ function getAzureCredential(env: IProcessEnv): StorageSharedKeyCredential | Defa
   }
 
   log.error(`${fnName} | unsupported AUTH_METHOD ${authMethod}`);
-  return <StorageSharedKeyCredential><unknown>null;
+  throw new QDEnvironmentError(`${fnName} | unsupported AUTH_METHOD ${authMethod}`);
 }
 
 function composeQueueUri(accountUri: string, queueName: string): string {
@@ -76,7 +77,7 @@ async function getQueueClient(queueName: string, env: IProcessEnv): Promise<Queu
   const accountUri = process.env.ACCOUNT_URI || '';
   if (accountUri.length === 0) {
     log.error(`${fnName} | missing account URI`);
-    throw new Error('Missing account URI');
+    throw new QDEnvironmentError('Missing account URI');
   }
   const queueUri = composeQueueUri(accountUri, queueName);
 
@@ -93,7 +94,7 @@ async function getQueueClient(queueName: string, env: IProcessEnv): Promise<Queu
   return new QueueClient(queueUri, azCredential, queueClientOptions);
 }
 
-async function getQueueClientForReceive(queueName: string, env: IProcessEnv = process.env): Promise<QueueClient> {
+export async function getQueueClientForReceive(queueName: string, env: IProcessEnv = process.env): Promise<QueueClient> {
   const fnName = `${moduleName}.getQueueClientForReceive`;
 
   // either succeeds or throws; what can I do if it throws?
@@ -101,13 +102,13 @@ async function getQueueClientForReceive(queueName: string, env: IProcessEnv = pr
 
   if (!await queueClient.exists()) {
     log.error(`${fnName} | queue ${queueName} does not exist`);
-    throw new Error(`${fnName} | queue ${queueName} does not exist`);
+    throw new QDResourceError(`${fnName} | queue ${queueName} does not exist`);
   }
   
   return queueClient;
 }
 
-async function getQueueClientForSend(queueName: string, env: IProcessEnv = process.env): Promise<QueueClient> {
+export async function getQueueClientForSend(queueName: string, env: IProcessEnv = process.env): Promise<QueueClient> {
   const fnName = `${moduleName}.getQueueClientForSend`;
 
   const queueClient = await getQueueClient(queueName, env);
@@ -118,14 +119,9 @@ async function getQueueClientForSend(queueName: string, env: IProcessEnv = proce
     const res = await queueClient.createIfNotExists();
     if (res._response.status < 200 || res._response.status > 299) {
       log.error(`${fnName} | createIfNotExists returned ${res._response.status} for queue ${queueName}`);
-      throw new Error(`${fnName} | createIfNotExists returned ${res._response.status} for queue ${queueName}`);
+      throw new QDResourceError(`${fnName} | createIfNotExists returned ${res._response.status} for queue ${queueName}`);
     }
   }
   
   return queueClient;
-}
-
-export {
-  getQueueClientForReceive,
-  getQueueClientForSend
 }

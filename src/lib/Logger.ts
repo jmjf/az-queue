@@ -1,7 +1,13 @@
 // const { logger } = require('@azure/storage-queue');
 import chalk from 'chalk';
 
-class Logger {
+export class Logger {
+
+  private writeLog: Function;
+
+  constructor(logFunction?: Function) {
+    this.writeLog = logFunction || console.log;
+  }
 
   private static logLevels = {
     verbose: { colorFn: chalk.white, levelTx: 'VERBOSE', separate: false },
@@ -12,24 +18,22 @@ class Logger {
     unknown: { colorFn: chalk.bgRed, levelTx: 'UNKNOWN', separate: true }
   }
 
-  private writeLog(level: string, message: string): void {
+  private log(level: string, message: string): void {
     
     if (!Logger.logLevels[level]) { level = 'unknown' };
 
-    if (Logger.logLevels[level].separate) { console.log() }    // blank line 
-    console.log(Logger.logLevels[level].colorFn(`${Logger.logLevels[level].levelTx} | ${(new Date()).toISOString()} | ${message}`));
-    if (Logger.logLevels[level].separate) { console.log() }    // blank line 
+    if (Logger.logLevels[level].separate) { this.writeLog() }    // blank line 
+    this.writeLog(Logger.logLevels[level].colorFn(`${Logger.logLevels[level].levelTx} | ${(new Date()).toISOString()} | ${message}`));
+    if (Logger.logLevels[level].separate) { this.writeLog() }    // blank line 
   }
 
-  public verbose(message: string): void { this.writeLog('verbose', message); }
-  public info(message: string): void { this.writeLog('info', message); }
-  public ok(message: string): void { this.writeLog('ok', message); }
-  public warning(message: string): void { this.writeLog('warning', message); }
-  public error(message: string): void { this.writeLog('error', message); }
+  public verbose(message: string): void { this.log('verbose', message); }
+  public info(message: string): void { this.log('info', message); }
+  public ok(message: string): void { this.log('ok', message); }
+  public warning(message: string): void { this.log('warning', message); }
+  public error(message: string): void { this.log('error', message); }
   
   public divider(): void {
-    console.log(chalk.magentaBright(`\n${'-'.repeat(50)}\n`));
+    this.writeLog(chalk.magentaBright(`\n${'-'.repeat(50)}\n`));
   }
 }
-
-export { Logger }
