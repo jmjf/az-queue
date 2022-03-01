@@ -8,9 +8,9 @@ interface IProcessEnv {
   AZURE_TENANT_ID?: string,
   AZURE_CLIENT_ID?: string,
   AZURE_CLIENT_SECRET?: string,
-  HTTP_PROXY?: string
+  HTTP_PROXY?: string,
   MAX_TIMEOUT: string,
-  TIMEOUT_INCREMENT: string
+  TIMEOUT_INCREMENT: string,
   RECEIVED_QUEUE_NAME: string,
   PREPARED_QUEUE_NAME: string,
   STATUS_QUEUE_NAME: string,

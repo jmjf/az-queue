@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Test azure queues",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-watch": "jest --watch"
   },
   "author": "",
   "license": "ISC",

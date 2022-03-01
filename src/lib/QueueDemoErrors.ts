@@ -16,3 +16,8 @@ export class QDResourceError extends QueueDemoError {
     super('QDResourceError', message);
   }
 }
+export class QDParameterError extends QueueDemoError {
+  constructor(message: string) {
+    super('QDParameterError', message);
+  }
+}
