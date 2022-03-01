@@ -1,9 +1,8 @@
-import { getTestEnv } from './testUtils';
-import { getAdCredential, getAuthMethod, getAzureCredential, getSharedKeyCredential } from '../src/lib/azCredentialHelpers';
-import { QDEnvironmentError } from '../src/lib/QueueDemoErrors';
-import { IProcessEnv } from '../src/lib/ProcessEnv';
 import { StorageSharedKeyCredential } from '@azure/storage-queue';
 import { DefaultAzureCredential } from '@azure/identity';
+import { QDEnvironmentError } from '../src/lib/QueueDemoErrors';
+import { IProcessEnv } from '../src/lib/ProcessEnv';
+import { getAdCredential, getAuthMethod, getAzureCredential, getSharedKeyCredential } from '../src/lib/azCredentialHelpers';
 
 describe('getAuthMethod()', () => {
 
