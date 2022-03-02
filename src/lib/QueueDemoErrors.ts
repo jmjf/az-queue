@@ -21,3 +21,9 @@ export class QDParameterError extends QueueDemoError {
     super('QDParameterError', message);
   }
 }
+
+export class QDNotReadyError extends QueueDemoError {
+  constructor(message: string) {
+    super('QDNotReadyError', message);
+  }
+}
