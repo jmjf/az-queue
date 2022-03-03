@@ -1,23 +1,28 @@
 import { QueueClient } from '@azure/storage-queue';
 import { Logger } from './Logger';
 import { IProcessEnv } from './ProcessEnv';
+import { getAzureCredential } from './azCredentialHelpers';
 import { IQueueManagerDeleteResponse, IQueueManagerReceiveResponse, IQueueManagerSendResponse } from '../interfaces/responses';
-import { getQueueClient } from './getQueueClient';
-import { QDNotReadyError, QDResourceError } from './QueueDemoErrors';
+import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
 
 const logger = new Logger();
-const moduleName = 'QueueManager';
+const moduleName = 'AzureQueue';
 
-export class QueueManager {
-  // data
-  private _queueName: string;
-  private _queueClient: QueueClient = <QueueClient><unknown>null;
+export class AzureQueue {
+  private readonly _queueName: string;
+  private readonly _queueClient: QueueClient = <QueueClient><unknown>null;
   private _exists: boolean = <boolean><unknown>null;
   private _halt = false;
 
   public constructor(queueName: string, env: IProcessEnv) {
+    const fnName = `${moduleName}.constructor`;
+    if (queueName.trim().length < 1) {
+      logger.error(`${fnName} | queueName is empty`);
+      throw new QDParameterError(`${fnName} | queueName is empty`);
+    }
+
     this._queueName = queueName;
-    this._queueClient = getQueueClient(queueName, env);
+    this._queueClient = this._getQueueClient(queueName, env);
   }
 
   public get queueName(): string {
@@ -28,6 +33,38 @@ export class QueueManager {
     return this._exists
   }
 
+  private _composeQueueUri(accountUri: string, queueName: string): string {
+    if (accountUri[accountUri.length - 1] == '/') {
+      return `${accountUri}${queueName}`;
+    } else {
+      return `${accountUri}/${queueName}`;
+    }
+  }
+  
+  private _getQueueClient(queueName: string, env: IProcessEnv): QueueClient {
+    const fnName = `${moduleName}.getQueueClient`;
+  
+    // get queueUri = accountUri + queueName
+    const accountUri = (env.ACCOUNT_URI || '').trim();
+    if (accountUri.length < 1) {
+      logger.error(`${fnName} | missing account URI`);
+      throw new QDEnvironmentError('Missing account URI');
+    }
+    const queueUri = this._composeQueueUri(accountUri, queueName);
+  
+    // will either succeed or throw; I can't do anything about throw
+    const azCredential = getAzureCredential(env);
+   
+    const queueClientOptions = {
+      retryOptions: {
+        maxTries: 1,
+        tryTimeoutInMs: 15 * 1000
+      }
+    };
+  
+    return new QueueClient(queueUri, azCredential, queueClientOptions);
+  }
+
   // To send an object (data structure), JSON.stringify() the object and pass as messageText.
   // Include the complete message structure. sendMessage() adds nothing to the message.
   // sendMessage() does base64 encode messageText, so do not send base64 encoded strings.
@@ -35,14 +72,16 @@ export class QueueManager {
   public async sendMessage(messageText: string, requestId: string = ''): Promise<IQueueManagerSendResponse> {
     const fnName = `${moduleName}.sendMessage`;
 
-    if (this._queueClient === null) {
-      logger.error(`${fnName} | queueClient is null | call connect() first`);
-      throw new QDNotReadyError(`${fnName} | queueClient is null | call connect() first`);
-    }
-
-    if (this._exists === null) {
+    if (!this._exists) {
+      // createIfNotExists is a wrapper around the create operation
+      // See https://docs.microsoft.com/en-us/rest/api/storageservices/create-queue4#remarks
+      // * if the queue does not exist and is created, status is 201 and createIfNotExists sets succeeded true
+      // * if the queue exists, status is 204, but succeeded is false
+      // * if the queue exists and metadata doesn't match, status is 409 and succeeded is false
+      // * if the queue name is invalid, status is 400 and succeeded is false
+      // for sendMessage's purposes, as long as the queue exists, we're okay, so 201, 204 and 409 are okay responses
       const res = await this._queueClient.createIfNotExists();
-      if (res._response.status >= 200 && res._response.status <= 299) {
+      if ([201, 204, 409].includes(res._response.status)) {
         this._exists = true;
       } else {
         logger.error(`${fnName} | createIfNotExists returned ${res._response.status} | queueName ${this._queueName}`);
@@ -58,12 +97,12 @@ export class QueueManager {
     // set up base response object
     const res =  <IQueueManagerSendResponse>{
       isOk: (sendResponse._response.status === 201),
-      traceRequestId: requestId || 'na',
+      traceRequestId: requestId || '',
       status: sendResponse._response.status,
       messageId: sendResponse.messageId,
       nextVisibleOn: sendResponse.nextVisibleOn,
       popReceipt: sendResponse.popReceipt,
-      respondDatetime: sendResponse.date,
+      responseDatetime: sendResponse.date,
       sendRequestId: sendResponse.requestId
     };
 
@@ -119,7 +158,7 @@ export class QueueManager {
 
   // wait for messages loops infinitely waiting for messages
   // messageHandler must return 0 on success
-  public async waitForMessages(messageHandler: Function, poisonQueueManager: QueueManager): Promise<void> {
+  public async waitForMessages(messageHandler: Function, poisonQueueService: AzureQueue): Promise<void> {
     const fnName = `${moduleName}.waitForMessages`;
 
     if (this._exists === null) {
@@ -144,8 +183,8 @@ export class QueueManager {
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
         } else if (receiveResponse.dequeueCount >= 5) {
           // if the message handler failed and the message has been dequeued at least 5 times, it's bad
-          const poisonResponse = await poisonQueueManager.sendMessage(receiveResponse.messageText);
-          logger.warning(`${fnName} | sent to poison queue | queueName ${this._queueName} | messageId ${receiveResponse.messageId} | poisonQueueName ${poisonQueueManager.queueName} | poisonMessageId ${poisonResponse.messageId}`);
+          const poisonResponse = await poisonQueueService.sendMessage(receiveResponse.messageText);
+          logger.warning(`${fnName} | sent to poison queue | queueName ${this._queueName} | messageId ${receiveResponse.messageId} | poisonQueueName ${poisonQueueService.queueName} | poisonMessageId ${poisonResponse.messageId}`);
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
         } // else let the message invisibility expire and retry when it comes back around
 
