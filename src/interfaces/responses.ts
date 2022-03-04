@@ -1,4 +1,4 @@
-export interface IQueueManagerSendResponse {
+export interface IAzureQueueSendResponse {
   isOk: boolean,
   traceRequestId: string,
   status: number,
@@ -7,9 +7,9 @@ export interface IQueueManagerSendResponse {
   popReceipt: string,
   responseDatetime?: Date,
   sendRequestId: string
-}
+};
 
-export interface IQueueManagerReceiveResponse {
+export interface IAzureQueueReceiveResponse {
   haveMessage: boolean,
   messageText: string,
   messageId: string,
@@ -18,13 +18,13 @@ export interface IQueueManagerReceiveResponse {
   nextVisibleOn: Date,
   responseDatetime?: Date,
   receiveRequestId?: string
-}
+};
 
-export interface IQueueManagerDeleteResponse {
-  deleted: boolean,
-  deletedMessageId: string,
+export interface IAzureQueueDeleteResponse {
+  didDelete: boolean,
+  messageId: string,
   errorCode: string,
   status: number,
   responseDatetime?: Date,
   deleteRequestId?: string
-}
+};

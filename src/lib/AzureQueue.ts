@@ -2,7 +2,7 @@ import { QueueClient } from '@azure/storage-queue';
 import { Logger } from './Logger';
 import { IProcessEnv } from './ProcessEnv';
 import { getAzureCredential } from './azCredentialHelpers';
-import { IQueueManagerDeleteResponse, IQueueManagerReceiveResponse, IQueueManagerSendResponse } from '../interfaces/responses';
+import { IAzureQueueDeleteResponse, IAzureQueueReceiveResponse, IAzureQueueSendResponse } from '../interfaces/responses';
 import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
 
 const logger = new Logger();
@@ -69,7 +69,7 @@ export class AzureQueue {
   // Include the complete message structure. sendMessage() adds nothing to the message.
   // sendMessage() does base64 encode messageText, so do not send base64 encoded strings.
   // Provide requestId to support call level traceability.
-  public async sendMessage(messageText: string, requestId: string = ''): Promise<IQueueManagerSendResponse> {
+  public async sendMessage(messageText: string, requestId: string = ''): Promise<IAzureQueueSendResponse> {
     const fnName = `${moduleName}.sendMessage`;
 
     if (!this._exists) {
@@ -95,7 +95,7 @@ export class AzureQueue {
     const sendResponse = await this._queueClient.sendMessage(base64String, options);
     
     // set up base response object
-    const res =  <IQueueManagerSendResponse>{
+    const res =  <IAzureQueueSendResponse>{
       isOk: (sendResponse._response.status === 201),
       traceRequestId: requestId || '',
       status: sendResponse._response.status,
@@ -114,14 +114,17 @@ export class AzureQueue {
     return res;
   }
 
-  public async receiveMessage(): Promise<IQueueManagerReceiveResponse> {
+  public async receiveMessage(): Promise<IAzureQueueReceiveResponse> {
     const fnName = `${moduleName}.receiveMessage`;
+    const receiveOptions = {
+      numberOfMessages: 1
+    };
 
-    const receiveResponse = await this._queueClient.receiveMessages();
+    const receiveResponse = await this._queueClient.receiveMessages(receiveOptions);
     if (receiveResponse.receivedMessageItems.length === 1) {
       const messageItem = receiveResponse.receivedMessageItems[0];
-      logger.info(`${fnName} | received | messageId ${messageItem.messageId} | queueName ${this._queueName}`)
-      return <IQueueManagerReceiveResponse>{
+      logger.info(`${fnName} | received | messageId ${messageItem.messageId} | queueName ${this._queueName}`);
+      return <IAzureQueueReceiveResponse>{
         haveMessage: true,
         messageText: Buffer.from(messageItem.messageText, 'base64').toString(),
         messageId: messageItem.messageId,
@@ -132,11 +135,15 @@ export class AzureQueue {
         receiveRequestId: receiveResponse.requestId
       }
     } else {
-      return <IQueueManagerReceiveResponse>{ haveMessage: false };
+      return <IAzureQueueReceiveResponse>{ 
+        haveMessage: false,
+        responseDatetime: receiveResponse.date,
+        receiveRequestId: receiveResponse.requestId
+      };
     }
   }
 
-  public async deleteMessage(messageId: string, popReceipt: string): Promise<IQueueManagerDeleteResponse> {
+  public async deleteMessage(messageId: string, popReceipt: string): Promise<IAzureQueueDeleteResponse> {
     const fnName = `${moduleName}.deleteMessage`;
 
     const deleteResponse = await this._queueClient.deleteMessage(messageId, popReceipt);
@@ -144,9 +151,9 @@ export class AzureQueue {
       logger.warning(`${fnName} | delete failed | queueName ${this._queueName} | messageId ${messageId} | errorCode ${deleteResponse.errorCode || 'not provided'}`);
     }
 
-    return <IQueueManagerDeleteResponse>{
-      deleted: (deleteResponse.errorCode != 'undefined'),
-      deletedMessageId: messageId,
+    return <IAzureQueueDeleteResponse>{
+      didDelete: (deleteResponse._response.status === 204),  // operation returns 204 if deleted
+      messageId: messageId,
       errorCode: deleteResponse.errorCode,
       status: deleteResponse._response.status,
       responseDatetime: deleteResponse.date,
@@ -157,7 +164,10 @@ export class AzureQueue {
   public haltWaitForMessages() { this._halt = true; }
 
   // wait for messages loops infinitely waiting for messages
-  // messageHandler must return 0 on success
+  // messageHandler must return 'OK' on success; return error message for log on failure
+  //
+  // TODO: logger.warning error message on messageHandler failed
+  //
   public async waitForMessages(messageHandler: Function, poisonQueueService: AzureQueue): Promise<void> {
     const fnName = `${moduleName}.waitForMessages`;
 
@@ -178,7 +188,7 @@ export class AzureQueue {
         // await message handler in case it does async stuff
         const mhRes = await messageHandler(receiveResponse.messageText);
                 
-        if (mhRes === 0) {
+        if (mhRes == 'OK') {
           // messageHandler succeeded
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
         } else if (receiveResponse.dequeueCount >= 5) {
