@@ -3,6 +3,10 @@ import { DefaultAzureCredential } from '@azure/identity';
 import { QDEnvironmentError } from '../src/lib/QueueDemoErrors';
 import { IProcessEnv } from '../src/lib/ProcessEnv';
 import { getAdCredential, getAuthMethod, getAzureCredential, getSharedKeyCredential } from '../src/lib/azCredentialHelpers';
+import { Logger } from '../src/lib/Logger';
+
+// mock Logger so methods do nothing to reduce distracting output
+jest.mock('../src/lib/Logger');
 
 describe('getAuthMethod()', () => {
 

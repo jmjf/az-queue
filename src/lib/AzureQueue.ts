@@ -4,6 +4,7 @@ import { IProcessEnv } from './ProcessEnv';
 import { getAzureCredential } from './azCredentialHelpers';
 import { IAzureQueueDeleteResponse, IAzureQueueReceiveResponse, IAzureQueueSendResponse } from '../interfaces/responses';
 import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
+import { DelayManager } from './DelayManager';
 
 const logger = new Logger();
 const moduleName = 'AzureQueue';
@@ -164,7 +165,7 @@ export class AzureQueue {
   public haltWaitForMessages() { this._halt = true; }
 
   // wait for messages loops infinitely waiting for messages
-  // messageHandler must return 'OK' on success; return error message for log on failure
+  // messageHandler must return a string; 'OK' on success; error message for log on failure
   //
   // TODO: logger.warning error message on messageHandler failed
   //
@@ -181,14 +182,14 @@ export class AzureQueue {
 
     const delayManager = new DelayManager();
 
-    do {
+    while (!this._halt) {
       const receiveResponse = await this.receiveMessage();
       if (receiveResponse.haveMessage) {
         logger.info(`${fnName} | received | queueName ${this._queueName} | messageId ${receiveResponse.messageId}`)
         // await message handler in case it does async stuff
-        const mhRes = await messageHandler(receiveResponse.messageText);
+        const mhRes = <string>await messageHandler(receiveResponse.messageText);
                 
-        if (mhRes == 'OK') {
+        if (mhRes.toUpperCase() == 'OK') {
           // messageHandler succeeded
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
         } else if (receiveResponse.dequeueCount >= 5) {
@@ -208,7 +209,7 @@ export class AzureQueue {
       if (!this._halt) { 
         await delayManager.delay();
       }
-    } while(!this._halt);
+    };
     
     this._halt = false;
   }

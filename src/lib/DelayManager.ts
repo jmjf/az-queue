@@ -1,5 +1,4 @@
-
-class DelayManager {
+export class DelayManager {
   private _baseDelayIncrementMs: number;
   private _maxDelayMs: number;
   private _multiplier: number;
