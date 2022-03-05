@@ -1,7 +1,7 @@
 import { DefaultAzureCredential } from '@azure/identity';
 import { StorageSharedKeyCredential } from '@azure/storage-queue';
 import { QDEnvironmentError } from './QueueDemoErrors';
-import { IProcessEnv } from './ProcessEnv';
+import { IProcessEnv } from './IProcessEnv';
 import { Logger } from './Logger';
 
 const log = new Logger();

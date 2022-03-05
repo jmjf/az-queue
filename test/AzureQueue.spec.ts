@@ -1,6 +1,6 @@
 import { QueueClient, QueueCreateIfNotExistsResponse, QueueDeleteMessageResponse, 
   QueueReceiveMessageResponse, QueueSendMessageResponse } from '@azure/storage-queue';
-import { IProcessEnv } from '../src/lib/ProcessEnv';
+import { IProcessEnv } from '../src/lib/IProcessEnv';
 import { QDEnvironmentError, QDParameterError, QDResourceError, QueueDemoError } from '../src/lib/QueueDemoErrors';
 import { AzureQueue } from '../src/lib/AzureQueue';
 import { DelayManager } from '../src/lib/DelayManager';
@@ -407,7 +407,7 @@ describe('AzureQueue', () => {
 
       expect.assertions(7);
       try {
-        await testQueue.waitForMessages(messageHandler, poisonQueue);
+        await testQueue.waitForMessages(poisonQueue, messageHandler);
       } catch(e) {
         // without this "cast" we get an error from the expect
         const qde = <QueueDemoError><unknown>e;
@@ -448,7 +448,7 @@ describe('AzureQueue', () => {
         return 'OK';
       };
 
-      await testQueue.waitForMessages(messageHandler, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       
       expect(mhCount).toBe(3);
       expect(aqReceiveMessageMock).toHaveBeenCalledTimes(3);
@@ -484,7 +484,7 @@ describe('AzureQueue', () => {
         return 'FAIL';
       };
 
-      await testQueue.waitForMessages(messageHandler, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       
       expect(mhCount).toBe(3);
       expect(aqReceiveMessageMock).toHaveBeenCalledTimes(3);
@@ -517,7 +517,7 @@ describe('AzureQueue', () => {
         return 'FAIL';
       };
 
-      await testQueue.waitForMessages(messageHandler, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       
       expect(mhCount).toBe(1);
       expect(aqReceiveMessageMock).toHaveBeenCalled();
@@ -550,7 +550,7 @@ describe('AzureQueue', () => {
         return 'FAIL';
       };
 
-      await testQueue.waitForMessages(messageHandler, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       
       expect(mhCount).toBe(1);
       expect(aqReceiveMessageMock).toHaveBeenCalled();
@@ -593,7 +593,7 @@ describe('AzureQueue', () => {
         return 'OK';
       };
 
-      await testQueue.waitForMessages(messageHandler, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       
       expect(dmCount).toBe(3);    // called delay
       expect(mhCount).toBe(0);    // did not call message handler
@@ -624,7 +624,7 @@ describe('AzureQueue', () => {
       const poisonQueue = new AzureQueue(poisonQueueName, env);
       
       let mhCount = 0;
-      const messageHandler1 = () => {
+      const messageHandler = () => {
         mhCount++;
         if (mhCount >= 3) {
           testQueue.haltWaitForMessages();
@@ -633,13 +633,13 @@ describe('AzureQueue', () => {
       };
 
       // waitForMessages() once
-      await testQueue.waitForMessages(messageHandler1, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       expect(mhCount).toBe(3);   // ran 3 loops as expected
 
       // when we run again, should get three loops
       // proves halt reset because loop stops when halt is true
       mhCount = 0;
-      await testQueue.waitForMessages(messageHandler1, poisonQueue);
+      await testQueue.waitForMessages(poisonQueue, messageHandler);
       expect(mhCount).toBe(3);
 
       jest.resetAllMocks();

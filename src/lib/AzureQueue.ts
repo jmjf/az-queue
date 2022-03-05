@@ -1,13 +1,13 @@
 import { QueueClient } from '@azure/storage-queue';
 import { Logger } from './Logger';
-import { IProcessEnv } from './ProcessEnv';
+import { IProcessEnv } from './IProcessEnv';
 import { getAzureCredential } from './azCredentialHelpers';
 import { IAzureQueueDeleteResponse, IAzureQueueReceiveResponse, IAzureQueueSendResponse } from '../interfaces/responses';
 import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
 import { DelayManager } from './DelayManager';
 import { IDelayManagerConfig } from '../interfaces/IDelayManagerConfig';
 
-const logger = new Logger();
+const log = new Logger();
 const moduleName = 'AzureQueue';
 
 export class AzureQueue {
@@ -19,7 +19,7 @@ export class AzureQueue {
   public constructor(queueName: string, env: IProcessEnv) {
     const fnName = `${moduleName}.constructor`;
     if (queueName.trim().length < 1) {
-      logger.error(`${fnName} | queueName is empty`);
+      log.error(`${fnName} | queueName is empty`);
       throw new QDParameterError(`${fnName} | queueName is empty`);
     }
 
@@ -49,7 +49,7 @@ export class AzureQueue {
     // get queueUri = accountUri + queueName
     const accountUri = (env.ACCOUNT_URI || '').trim();
     if (accountUri.length < 1) {
-      logger.error(`${fnName} | missing account URI`);
+      log.error(`${fnName} | missing account URI`);
       throw new QDEnvironmentError('Missing account URI');
     }
     const queueUri = this._composeQueueUri(accountUri, queueName);
@@ -86,7 +86,7 @@ export class AzureQueue {
       if ([201, 204, 409].includes(res._response.status)) {
         this._exists = true;
       } else {
-        logger.error(`${fnName} | createIfNotExists returned ${res._response.status} | queueName ${this._queueName}`);
+        log.error(`${fnName} | createIfNotExists returned ${res._response.status} | queueName ${this._queueName}`);
         throw new QDResourceError(`${fnName} | createIfNotExists returned ${res._response.status} | queueName ${this._queueName}`);
       }
     }
@@ -109,9 +109,9 @@ export class AzureQueue {
     };
 
     if (res.isOk) {
-      logger.ok(`${fnName} | sent | messageId ${sendResponse.messageId} | clientRequestId ${sendResponse.clientRequestId}`);
+      log.ok(`${fnName} | sent | messageId ${sendResponse.messageId} | clientRequestId ${sendResponse.clientRequestId}`);
     } else {
-      logger.error(`${fnName} | status ${sendResponse._response.status} | requestId ${res.traceRequestId}`);
+      log.error(`${fnName} | status ${sendResponse._response.status} | requestId ${res.traceRequestId}`);
     }
     return res;
   }
@@ -125,7 +125,7 @@ export class AzureQueue {
     const receiveResponse = await this._queueClient.receiveMessages(receiveOptions);
     if (receiveResponse.receivedMessageItems.length === 1) {
       const messageItem = receiveResponse.receivedMessageItems[0];
-      logger.info(`${fnName} | received | messageId ${messageItem.messageId} | queueName ${this._queueName}`);
+      log.info(`${fnName} | received | messageId ${messageItem.messageId} | queueName ${this._queueName}`);
       return <IAzureQueueReceiveResponse>{
         haveMessage: true,
         messageText: Buffer.from(messageItem.messageText, 'base64').toString(),
@@ -150,7 +150,7 @@ export class AzureQueue {
 
     const deleteResponse = await this._queueClient.deleteMessage(messageId, popReceipt);
     if (deleteResponse.errorCode != 'undefined') {
-      logger.warning(`${fnName} | delete failed | queueName ${this._queueName} | messageId ${messageId} | errorCode ${deleteResponse.errorCode || 'not provided'}`);
+      log.warning(`${fnName} | delete failed | queueName ${this._queueName} | messageId ${messageId} | errorCode ${deleteResponse.errorCode || 'not provided'}`);
     }
 
     return <IAzureQueueDeleteResponse>{
@@ -170,14 +170,14 @@ export class AzureQueue {
   // delayManagerConfig is an optional set of parameters to change delay properties
   // see IDelayManagerConfig, unassigned parameters are default in DelayManager constructor
   // 
-  public async waitForMessages(messageHandler: Function, poisonQueueService: AzureQueue, delayManagerConfig?: IDelayManagerConfig): Promise<void> {
+  public async waitForMessages(poisonQueueService: AzureQueue, messageHandler: Function, messageHandlerOptions: object = {}, delayManagerConfig?: IDelayManagerConfig): Promise<void> {
     const fnName = `${moduleName}.waitForMessages`;
 
     if (this._exists === null) {
       this._exists = await this._queueClient.exists();
     }
     if (!this._exists) {
-      logger.error(`${fnName} | does not exist | queue ${this._queueName}`);
+      log.error(`${fnName} | does not exist | queue ${this._queueName}`);
       throw new QDResourceError(`${fnName} | does not exist | queue ${this._queueName}`);
     }
 
@@ -186,19 +186,19 @@ export class AzureQueue {
     while (!this._halt) {
       const receiveResponse = await this.receiveMessage();
       if (receiveResponse.haveMessage) {
-        logger.info(`${fnName} | received | queueName ${this._queueName} | messageId ${receiveResponse.messageId}`)
+        log.info(`${fnName} | received | queueName ${this._queueName} | messageId ${receiveResponse.messageId}`)
         // await message handler in case it does async stuff
-        const mhRes = <string>await messageHandler(receiveResponse.messageText);
+        const mhRes = <string>await messageHandler(receiveResponse.messageText, messageHandlerOptions);
                 
         if (mhRes.toUpperCase() == 'OK') {
           // messageHandler succeeded
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
         } else {
-          logger.warning(`${fnName} | message handler not OK | ${mhRes}`);
+          log.warning(`${fnName} | message handler not OK | ${mhRes}`);
           if (receiveResponse.dequeueCount >= 5) {
             // if the message handler failed and the message has been dequeued at least 5 times, it's bad
             const poisonResponse = await poisonQueueService.sendMessage(receiveResponse.messageText);
-            logger.warning(`${fnName} | sent to poison queue | queueName ${this._queueName} | messageId ${receiveResponse.messageId} | poisonQueueName ${poisonQueueService.queueName} | poisonMessageId ${poisonResponse.messageId}`);
+            log.warning(`${fnName} | sent to poison queue | queueName ${this._queueName} | messageId ${receiveResponse.messageId} | poisonQueueName ${poisonQueueService.queueName} | poisonMessageId ${poisonResponse.messageId}`);
             await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
           }
         } // else let the message invisibility expire and retry when it comes back around
@@ -206,13 +206,15 @@ export class AzureQueue {
         delayManager.resetDelay();
       } else { // no messages
         delayManager.incrementDelay();
-        logger.info(`${fnName} | no messages | waiting ${delayManager.currentDelayMs} ms`)
+        log.info(`${fnName} | no messages | waiting ${delayManager.currentDelayMs} ms`)
       }
       
       // if halted while processing message, don't delay before halting
       if (!this._halt) { 
         await delayManager.delay();
       }
+
+      log.divider();
     };
     
     this._halt = false;

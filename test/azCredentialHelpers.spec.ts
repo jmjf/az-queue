@@ -1,7 +1,7 @@
 import { StorageSharedKeyCredential } from '@azure/storage-queue';
 import { DefaultAzureCredential } from '@azure/identity';
 import { QDEnvironmentError } from '../src/lib/QueueDemoErrors';
-import { IProcessEnv } from '../src/lib/ProcessEnv';
+import { IProcessEnv } from '../src/lib/IProcessEnv';
 import { getAdCredential, getAuthMethod, getAzureCredential, getSharedKeyCredential } from '../src/lib/azCredentialHelpers';
 import { Logger } from '../src/lib/Logger';
 
