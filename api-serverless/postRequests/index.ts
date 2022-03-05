@@ -6,17 +6,17 @@ import { requestApiVersions } from "../supportedApiVersions";
 // ensure their functions.json handles only the specific method they support
 // ensure they specify route: requests in function.json
 const postRequests: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
-    const now = new Date();
     const fnName = 'postRequests';
+    const now = new Date();
     let httpStatus = 0;
     context.log(`INFO | ${fnName} | received request`);
 
     // request validation
     if (!req.body) {
-        context.log(`ERROR | ${fnName} | req.body falsey`);
+        context.log(`ERROR | ${fnName} | missing req.body`);
         httpStatus = 400;
     } else if (!req.body.apiVersion) {
-        context.log(`ERROR | ${fnName} | req.body.apiVersion falsey`);
+        context.log(`ERROR | ${fnName} | missing req.body.apiVersion`);
         httpStatus = 400;
     } else {
         // we have a body (data payload) and API version
