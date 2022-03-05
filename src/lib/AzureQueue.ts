@@ -75,19 +75,15 @@ export class AzureQueue {
     const fnName = `${moduleName}.sendMessage`;
 
     if (!this._exists) {
-      // createIfNotExists is a wrapper around the create operation
-      // See https://docs.microsoft.com/en-us/rest/api/storageservices/create-queue4#remarks
-      // * if the queue does not exist and is created, status is 201 and createIfNotExists sets succeeded true
-      // * if the queue exists, status is 204, but succeeded is false
-      // * if the queue exists and metadata doesn't match, status is 409 and succeeded is false
-      // * if the queue name is invalid, status is 400 and succeeded is false
-      // for sendMessage's purposes, as long as the queue exists, we're okay, so 201, 204 and 409 are okay responses
-      const res = await this._queueClient.createIfNotExists();
-      if ([201, 204, 409].includes(res._response.status)) {
+      // attempt to ensure the queue is created
+      await this._queueClient.createIfNotExists();
+      // but verify it exists
+      if (await this._queueClient.exists()) {
         this._exists = true;
       } else {
-        log.error(`${fnName} | createIfNotExists returned ${res._response.status} | queueName ${this._queueName}`);
-        throw new QDResourceError(`${fnName} | createIfNotExists returned ${res._response.status} | queueName ${this._queueName}`);
+        const err = `${fnName} | queueName ${this._queueName} does not exist`;
+        log.error(err);
+        throw new QDResourceError(err);
       }
     }
 
@@ -149,7 +145,7 @@ export class AzureQueue {
     const fnName = `${moduleName}.deleteMessage`;
 
     const deleteResponse = await this._queueClient.deleteMessage(messageId, popReceipt);
-    if (deleteResponse.errorCode != 'undefined') {
+    if (deleteResponse.errorCode) {
       log.warning(`${fnName} | delete failed | queueName ${this._queueName} | messageId ${messageId} | errorCode ${deleteResponse.errorCode || 'not provided'}`);
     }
 
@@ -186,7 +182,6 @@ export class AzureQueue {
     while (!this._halt) {
       const receiveResponse = await this.receiveMessage();
       if (receiveResponse.haveMessage) {
-        log.info(`${fnName} | received | queueName ${this._queueName} | messageId ${receiveResponse.messageId}`)
         // await message handler in case it does async stuff
         const mhRes = <string>await messageHandler(receiveResponse.messageText, messageHandlerOptions);
                 
@@ -194,7 +189,7 @@ export class AzureQueue {
           // messageHandler succeeded
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
         } else {
-          log.warning(`${fnName} | message handler not OK | ${mhRes}`);
+          log.warning(`${fnName} | message handler error | ${mhRes}`);
           if (receiveResponse.dequeueCount >= 5) {
             // if the message handler failed and the message has been dequeued at least 5 times, it's bad
             const poisonResponse = await poisonQueueService.sendMessage(receiveResponse.messageText);

@@ -1,6 +1,5 @@
 import { DelayManager } from '../src/lib/DelayManager';
 import { IDelayManagerConfig } from '../src/interfaces/IDelayManagerConfig';
-import { delay } from '@azure/core-http';
 
 describe('DelayManager', () => {
   describe('incrementDelay', () => {

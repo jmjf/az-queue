@@ -47,17 +47,17 @@ async function main() {
     .command('send-requests')
     .description('Generate messages and send them to an Azure queue using an Azure function')
     .argument('<messageCount>', 'number of messages to send')
-    .action((messageCount) => { sendRequests(messageCount) });
+    .action((messageCount) => { sendRequests(messageCount, process.env) });
 
   program
     .command('read-statuses')
     .description('Read messages from an Azure queue and delete them from the queue')
-    .action(() => { readStatuses(statusQueueName) });
+    .action(() => { readStatuses(statusQueueName, process.env) });
 
   program
     .command('prepare-requests')
     .description('Read messages from the received queue, prepare them, publish to the prepared queue, delete them from the received queue')
-    .action(() => { prepareRequests(receivedQueueName, preparedQueueName) } );
+    .action(() => { prepareRequests(receivedQueueName, preparedQueueName, process.env) } );
 
   await program.parseAsync(process.argv)
 }

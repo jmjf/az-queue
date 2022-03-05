@@ -1,7 +1,7 @@
 import { QueueClient, QueueCreateIfNotExistsResponse, QueueDeleteMessageResponse, 
   QueueReceiveMessageResponse, QueueSendMessageResponse } from '@azure/storage-queue';
 import { IProcessEnv } from '../src/lib/IProcessEnv';
-import { QDEnvironmentError, QDParameterError, QDResourceError, QueueDemoError } from '../src/lib/QueueDemoErrors';
+import { QDEnvironmentError, QDParameterError, QueueDemoError } from '../src/lib/QueueDemoErrors';
 import { AzureQueue } from '../src/lib/AzureQueue';
 import { DelayManager } from '../src/lib/DelayManager';
 import { IAzureQueueReceiveResponse } from '../src/interfaces/responses';
@@ -101,6 +101,7 @@ describe('AzureQueue', () => {
     test('returns isOk true and expected result object on OK', async () => {
       // mock QueueClient calls
       const createIfNotExistsMock = jest.spyOn(QueueClient.prototype, 'createIfNotExists').mockResolvedValue(mockCreateNotExistsResponse_OK);
+      const existsMock = jest.spyOn(QueueClient.prototype, 'exists').mockResolvedValue(true);
       jest.spyOn(QueueClient.prototype, 'sendMessage').mockResolvedValue(mockSendResponse_OK);
 
       const messageText = 'testMessage';
@@ -132,6 +133,7 @@ describe('AzureQueue', () => {
 
       // mock QueueClient calls
       const createIfNotExistsMock = jest.spyOn(QueueClient.prototype, 'createIfNotExists').mockResolvedValue(mockCreateNotExistsResponse_OK);
+      const existsMock = jest.spyOn(QueueClient.prototype, 'exists').mockResolvedValue(true);
       jest.spyOn(QueueClient.prototype, 'sendMessage').mockResolvedValue(mockSendResponse_OK);
 
       const messageText = 'testMessage';
@@ -149,8 +151,9 @@ describe('AzureQueue', () => {
       jest.resetAllMocks();
     });
 
-    test('throws QDResourceError on bad response from createIfNotExists', async () => {
+    test('throws QDResourceError if queue does not exist (after createIfNotExists())', async () => {
       const createIfNotExistsMock = jest.spyOn(QueueClient.prototype, 'createIfNotExists').mockResolvedValue(mockCreateNotExistsResponse_ERROR);
+      const existsMock = jest.spyOn(QueueClient.prototype, 'exists').mockResolvedValue(false);
       jest.spyOn(QueueClient.prototype, 'sendMessage').mockResolvedValue(mockSendResponse_OK);
 
       const messageText = 'testMessage';
@@ -175,6 +178,7 @@ describe('AzureQueue', () => {
     test('returns isOk false on sendMessage error', async () => {
       // mock QueueClient calls
       const createIfNotExistsMock = jest.spyOn(QueueClient.prototype, 'createIfNotExists').mockResolvedValue(mockCreateNotExistsResponse_OK);
+      const existsMock = jest.spyOn(QueueClient.prototype, 'exists').mockResolvedValue(true);
       jest.spyOn(QueueClient.prototype, 'sendMessage').mockResolvedValue(mockSendResponse_ERROR);
 
       const messageText = 'testMessage';
