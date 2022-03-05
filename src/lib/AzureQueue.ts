@@ -5,6 +5,8 @@ import { getAzureCredential } from './azCredentialHelpers';
 import { IAzureQueueDeleteResponse, IAzureQueueReceiveResponse, IAzureQueueSendResponse } from '../interfaces/responses';
 import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
 import { DelayManager } from './DelayManager';
+import { IDelayManagerConfig } from '../interfaces/IDelayManagerConfig';
+import { delay } from '../common/misc';
 
 const logger = new Logger();
 const moduleName = 'AzureQueue';
@@ -166,10 +168,10 @@ export class AzureQueue {
 
   // wait for messages loops infinitely waiting for messages
   // messageHandler must return a string; 'OK' on success; error message for log on failure
-  //
-  // TODO: logger.warning error message on messageHandler failed
-  //
-  public async waitForMessages(messageHandler: Function, poisonQueueService: AzureQueue): Promise<void> {
+  // delayManagerConfig is an optional set of parameters to change delay properties
+  // see IDelayManagerConfig, unassigned parameters are default in DelayManager constructor
+  // 
+  public async waitForMessages(messageHandler: Function, poisonQueueService: AzureQueue, delayManagerConfig?: IDelayManagerConfig): Promise<void> {
     const fnName = `${moduleName}.waitForMessages`;
 
     if (this._exists === null) {
@@ -180,7 +182,7 @@ export class AzureQueue {
       throw new QDResourceError(`${fnName} | does not exist | queue ${this._queueName}`);
     }
 
-    const delayManager = new DelayManager();
+    const delayManager = new DelayManager(delayManagerConfig);
 
     while (!this._halt) {
       const receiveResponse = await this.receiveMessage();
@@ -192,11 +194,14 @@ export class AzureQueue {
         if (mhRes.toUpperCase() == 'OK') {
           // messageHandler succeeded
           await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
-        } else if (receiveResponse.dequeueCount >= 5) {
-          // if the message handler failed and the message has been dequeued at least 5 times, it's bad
-          const poisonResponse = await poisonQueueService.sendMessage(receiveResponse.messageText);
-          logger.warning(`${fnName} | sent to poison queue | queueName ${this._queueName} | messageId ${receiveResponse.messageId} | poisonQueueName ${poisonQueueService.queueName} | poisonMessageId ${poisonResponse.messageId}`);
-          await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
+        } else {
+          logger.warning(`${fnName} | message handler not OK | ${mhRes}`);
+          if (receiveResponse.dequeueCount >= 5) {
+            // if the message handler failed and the message has been dequeued at least 5 times, it's bad
+            const poisonResponse = await poisonQueueService.sendMessage(receiveResponse.messageText);
+            logger.warning(`${fnName} | sent to poison queue | queueName ${this._queueName} | messageId ${receiveResponse.messageId} | poisonQueueName ${poisonQueueService.queueName} | poisonMessageId ${poisonResponse.messageId}`);
+            await this.deleteMessage(receiveResponse.messageId, receiveResponse.popReceipt);
+          }
         } // else let the message invisibility expire and retry when it comes back around
 
         delayManager.resetDelay();

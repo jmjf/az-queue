@@ -1,3 +1,4 @@
+import { IDelayManagerConfig } from "../interfaces/IDelayManagerConfig";
 export class DelayManager {
   private _baseDelayIncrementMs: number;
   private _maxDelayMs: number;
@@ -12,11 +13,11 @@ export class DelayManager {
   //    multiplier: a fixed multiplier value
   //        If not provided, will be calculated as current delay / baseIncrementMs each increment
   //
-  public constructor (baseIncrementMs:number = 200, maxMs:number = 30000, multiplier:number = 0) {
-    this._baseDelayIncrementMs = baseIncrementMs;
-    this._currentDelayMs = baseIncrementMs;
-    this._maxDelayMs = maxMs;
-    this._multiplier = multiplier;
+  public constructor (delayManagerConfig?: IDelayManagerConfig) {
+    this._baseDelayIncrementMs = delayManagerConfig?.baseDelayIncrementMs || 200;
+    this._maxDelayMs = delayManagerConfig?.maxDelayMs || (30 * 1000);
+    this._multiplier = delayManagerConfig?.multiplier || 0;
+    this._currentDelayMs = this._baseDelayIncrementMs;
   }
 
   public get currentDelayMs(): number {
