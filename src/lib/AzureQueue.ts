@@ -6,7 +6,6 @@ import { IAzureQueueDeleteResponse, IAzureQueueReceiveResponse, IAzureQueueSendR
 import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
 import { DelayManager } from './DelayManager';
 import { IDelayManagerConfig } from '../interfaces/IDelayManagerConfig';
-import { delay } from '../common/misc';
 
 const logger = new Logger();
 const moduleName = 'AzureQueue';

@@ -17,7 +17,7 @@ export class DelayManager {
     this._baseDelayIncrementMs = delayManagerConfig?.baseDelayIncrementMs || 200;
     this._maxDelayMs = delayManagerConfig?.maxDelayMs || (30 * 1000);
     this._multiplier = delayManagerConfig?.multiplier || 0;
-    this._currentDelayMs = this._baseDelayIncrementMs;
+    this._currentDelayMs = 0;
   }
 
   public get currentDelayMs(): number {
@@ -36,7 +36,7 @@ export class DelayManager {
   public incrementDelay(): void {
     // when _baseDelayIncrementMs = 200 and currentDelayMs = 0, incremement by base (current = 200)
     // when current = 200, increment by (current/base => 2) + 1 => 2 * base (current = 600)
-    // when current = 600, increment 3 + 1 => 4 * base (current = 1200)
+    // when current = 600, increment 3 + 1 => 4 * base (current = 1400)
     // until calculated value is > _maxDelayMs, then _maxDelayMs
     const multiplier = ((this._multiplier > 0) ? this._multiplier : (this.currentDelayMs / this._baseDelayIncrementMs) + 1);
     this._currentDelayMs = Math.min(this._maxDelayMs, this.currentDelayMs + (multiplier * this._baseDelayIncrementMs));
@@ -46,6 +46,6 @@ export class DelayManager {
   //   sets the delay time to _baseDelayIncrementMs
   //
   public resetDelay(): void {
-    this._currentDelayMs = this._baseDelayIncrementMs
+    this._currentDelayMs = 0;
   }
 }
