@@ -2,7 +2,7 @@ import postRequests from './index';
 import { getDefaultContext } from '../__testUtils/getDefaultContext';
 import { requestApiVersions } from '../supportedApiVersions';
 
-test('postRequests should return 200 for good request', async () => {
+test('postRequests should return 202 for good request', async () => {
   const context = getDefaultContext();
   const request = {
     body: {
@@ -14,7 +14,7 @@ test('postRequests should return 200 for good request', async () => {
 
   await postRequests(context, request);
 
-  expect(context.res?.status).toBe(200);
+  expect(context.res?.status).toBe(202);
   expect(context.res?.body.requesterId).toMatch(request.body.requesterId);
   expect(context.res?.body.messageText).toMatch(request.body.messageText);
 });
@@ -26,6 +26,7 @@ test('postRequests should return 400 for missing request body', async () => {
   await postRequests(context, request);
 
   expect(context.res?.status).toBe(400);
+  expect(context.res?.body.requestId).toBeDefined();
 });
 
 test('postRequests should return 400 for apiVersion missing', async () => {
