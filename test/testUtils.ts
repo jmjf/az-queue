@@ -1,4 +1,4 @@
-import { IProcessEnv } from '../src/lib/ProcessEnv';
+import { IProcessEnv } from '../src/lib/IProcessEnv';
 
 // UUIDs are randomly generated and client secret is a random string I typed and encoded as base64
 
