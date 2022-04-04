@@ -1,8 +1,10 @@
-import { DelayManager } from '../src/lib/DelayManager';
-import { IDelayManagerConfig } from '../src/interfaces/IDelayManagerConfig';
+import { DelayManager, IDelayManagerConfig } from '../src/lib/DelayManager';
 
 describe('DelayManager', () => {
-  describe('incrementDelay', () => {
+
+  // incrementDelay() also tests constructor for default and custom configurations
+
+  describe('incrementDelay()', () => {
     test('gets expected results for default config', () => {
       const delayManager = new DelayManager();
 
@@ -14,12 +16,15 @@ describe('DelayManager', () => {
 
       delayManager.incrementDelay();
       expect(delayManager.currentDelayMs).toBe(1400);
+
+      delayManager.incrementDelay();
+      expect(delayManager.currentDelayMs).toBe(3000);      
     });
 
     test('gets expected results for custom config', () => {
       const config = <IDelayManagerConfig>{
         baseDelayIncrementMs: 250,
-        maxDelayMs: 2000,  // also confirms we don't go over max
+        maxDelayMs: 2500,
         multiplier: 3
       };
       const delayManager = new DelayManager(config);
@@ -31,11 +36,17 @@ describe('DelayManager', () => {
       expect(delayManager.currentDelayMs).toBe(1500);
 
       delayManager.incrementDelay();
-      expect(delayManager.currentDelayMs).toBe(2000);  // calculated delay should be 2250, so this means max is limiting
+      expect(delayManager.currentDelayMs).toBe(2250);
+
+      delayManager.incrementDelay();
+      expect(delayManager.currentDelayMs).toBe(2500);  // 2250 + 750 = 3000, so 2500 means limited
+
+      delayManager.incrementDelay();
+      expect(delayManager.currentDelayMs).toBe(2500);  // and subsequent increments don't increment above max
     });
   })
   
-  describe('resetDelay', () => {
+  describe('resetDelay()', () => {
     test('resets delay to 0', () => {
       const delayManager = new DelayManager();
 

@@ -4,8 +4,7 @@ import { IProcessEnv } from './IProcessEnv';
 import { getAzureCredential } from './azCredentialHelpers';
 import { IAzureQueueDeleteResponse, IAzureQueueReceiveResponse, IAzureQueueSendResponse } from '../interfaces/responses';
 import { QDResourceError, QDParameterError, QDEnvironmentError } from './QueueDemoErrors';
-import { DelayManager } from './DelayManager';
-import { IDelayManagerConfig } from '../interfaces/IDelayManagerConfig';
+import { DelayManager, IDelayManagerConfig } from './DelayManager';
 
 const log = new Logger();
 const moduleName = 'AzureQueue';

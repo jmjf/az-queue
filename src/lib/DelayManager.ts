@@ -1,16 +1,20 @@
-import { IDelayManagerConfig } from "../interfaces/IDelayManagerConfig";
+export interface IDelayManagerConfig {
+  baseDelayIncrementMs?: number,
+  maxDelayMs?: number,
+  multiplier?: number
+}
 export class DelayManager {
   private _baseDelayIncrementMs: number;
   private _maxDelayMs: number;
   private _multiplier: number;
   private _currentDelayMs: number;
 
-  // constructor(baseIncrementMs:number = 200, maxMs:number = 30000, multiplier:number = 0)
-  // Parameters:
-  //    baseIncrementMs: the base number of milliseconds to when incrementing the timer
+  // constructor(delayManagerConfig?: IDelayManagerConfig)
+  // delayManagerConfig attributes:
+  //    baseIncrementMs: the base number of milliseconds to when incrementing the timer; default 200
   //        The increment function multiplies this value by multipler or current delay / baseIncrementMs
-  //    maxMs: the maximum delay in milliseconds
-  //    multiplier: a fixed multiplier value
+  //    maxMs: the maximum delay in milliseconds; default (30 * 1000)
+  //    multiplier: a fixed multiplier value; default 0
   //        If not provided, will be calculated as current delay / baseIncrementMs each increment
   //
   public constructor (delayManagerConfig?: IDelayManagerConfig) {
@@ -24,10 +28,12 @@ export class DelayManager {
     return this._currentDelayMs;
   }
   // async delay(): Promise<void>
-  //   returns a Promise that represents a delay; await to wait for the delay
+  //   returns a Promise that represents a delay; await to wait for the current delay time
+  //
+  // UNTESTABLE, CHANGE WITH CARE
   //
   public async delay(): Promise<void> { 
-    return new Promise(res => setTimeout(res, this.currentDelayMs));
+    return new Promise(res => setTimeout(res, this._currentDelayMs));
   }
   
   // incrementDelay(): void
