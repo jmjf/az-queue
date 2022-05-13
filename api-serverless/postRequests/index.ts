@@ -6,6 +6,29 @@ import { PostRequestsResponse } from "../interfaces/httpRequests";
 const httpError = 400;
 const httpAccepted = 202;
 
+function isRequestGood(context: Context, req:HttpRequest, requestId: string): boolean {
+    const logIdentifier = `postRequests | ${requestId}`;
+    let result = true;
+    
+    if (!req.body) {
+        context.log(`ERROR | ${logIdentifier} | missing req.body`);
+        result = false;
+    } else if (!req.body.apiVersion) {
+        context.log(`ERROR | ${logIdentifier} | missing req.body.apiVersion`);
+        result = false;
+    } else if (!requestApiVersions.includes(req.body.apiVersion)) {
+        context.log(`ERROR | ${logIdentifier} | invalid apiVersion ${req.body.apiVersion}`);
+        result = false;
+    } else if (!req.body.requesterId || typeof req.body.requesterId != 'string' || req.body.requesterId.trim().length === 0) {
+        context.log(`ERROR | ${logIdentifier} | requesterId missing or invalid`);
+        result = false;
+    } else if (!req.body.messageText || typeof req.body.messageText != 'string' || req.body.requesterId.trim().length === 0) {
+        context.log(`ERROR | ${logIdentifier} | messageText missing or invalid`);
+        result = false;
+    }
+    return result;
+}
+
 // If I need a GET, PUT, DELETE, add new functions in separate directories
 // ensure their functions.json handles only the specific method they support
 // ensure they specify route: requests in function.json
@@ -22,17 +45,7 @@ const postRequests: AzureFunction = async function (context: Context, req: HttpR
     context.log(`INFO | ${logIdentifier} | received request`);
 
     // If something's wrong, I want to log it without exposing the request data in the log, so this if...else structure
-    if (!req.body) {
-        context.log(`ERROR | ${logIdentifier} | missing req.body`);
-    } else if (!req.body.apiVersion) {
-        context.log(`ERROR | ${logIdentifier} | missing req.body.apiVersion`);
-    } else if (!requestApiVersions.includes(req.body.apiVersion)) {
-        context.log(`ERROR | ${logIdentifier} | invalid apiVersion ${req.body.apiVersion}`);
-    } else if (!req.body.requesterId || typeof req.body.requesterId != 'string' || req.body.requesterId.trim().length === 0) {
-        context.log(`ERROR | ${logIdentifier} | requesterId missing or invalid`);
-    } else if (!req.body.messageText || typeof req.body.messageText != 'string' || req.body.requesterId.trim().length === 0) {
-        context.log(`ERROR | ${logIdentifier} | messageText missing or invalid`);
-    } else {
+    if (isRequestGood(context, req, message.requestId)) {
         httpStatus = httpAccepted; // the request is good
         switch (req.body.apiVersion) {
             case '2022-02-12': 

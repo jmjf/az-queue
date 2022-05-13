@@ -3,8 +3,10 @@ import chalk from 'chalk';
 
 export class Logger {
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   private writeLog: Function;
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   constructor(logFunction?: Function) {
     this.writeLog = logFunction || console.log;
   }
@@ -20,7 +22,7 @@ export class Logger {
 
   private log(level: string, message: string): void {
     
-    if (!Logger.logLevels[level]) { level = 'unknown' };
+    if (!Logger.logLevels[level]) { level = 'unknown' }
 
     if (Logger.logLevels[level].separate) { this.writeLog() }    // blank line 
     this.writeLog(Logger.logLevels[level].colorFn(`${Logger.logLevels[level].levelTx} | ${(new Date()).toISOString()} | ${message}`));

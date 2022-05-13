@@ -12,7 +12,7 @@ import { Logger } from './lib/Logger';
 
 import { program } from 'commander';
 
-async function main() {
+export async function main() {
   const log = new Logger();
   if (!process.env.APP_ENV) {
     log.error(`main | APP_ENV is falsey`);
@@ -66,6 +66,4 @@ async function main() {
    console.error(error);
    process.exit(1);
  });
- 
- module.exports = { main };
  

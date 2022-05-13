@@ -7,7 +7,7 @@ export interface IAzureQueueSendResponse {
   popReceipt: string,
   responseDatetime?: Date,
   sendRequestId: string
-};
+}
 
 export interface IAzureQueueReceiveResponse {
   haveMessage: boolean,
@@ -18,7 +18,7 @@ export interface IAzureQueueReceiveResponse {
   nextVisibleOn: Date,
   responseDatetime?: Date,
   receiveRequestId?: string
-};
+}
 
 export interface IAzureQueueDeleteResponse {
   didDelete: boolean,
@@ -27,4 +27,4 @@ export interface IAzureQueueDeleteResponse {
   status: number,
   responseDatetime?: Date,
   deleteRequestId?: string
-};
+}

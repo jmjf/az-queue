@@ -8,13 +8,12 @@ import { QDResourceError } from '../lib/QueueDemoErrors';
 const log = new Logger();
 const moduleName = `prepareRequests`;
 
-interface MHOptions { sendQueue: AzureQueue };
+interface MHOptions { sendQueue: AzureQueue }
 
-function messageHandler(messageString: string, options: MHOptions): string {
+function messageHandler(messageString: string, options?: MHOptions): string {
   const fnName = `${moduleName}.messageHandler`
   const sendQueue = options?.sendQueue || null;
 
-  // TODO: make AzureQueue object's name a constant somewhere
   if (sendQueue === null || sendQueue.constructor.name !== queueObjectName ) {
     const err = `${fnName} | invalid options.sendQueue`;
     log.error(err);

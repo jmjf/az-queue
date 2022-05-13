@@ -61,7 +61,6 @@ export async function sendRequests(messageCount: number, env: IProcessEnv): Prom
     return
   }
   
-
   for (let i = 0; i < messageCount; i++) {
     // random returns a floating point number between 0 and <1
     // multiply by 9 and floor() it to get a number between 0 and 8

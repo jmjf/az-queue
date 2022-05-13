@@ -70,7 +70,7 @@ export class AzureQueue {
   // Include the complete message structure. sendMessage() adds nothing to the message.
   // sendMessage() does base64 encode messageText, so do not send base64 encoded strings.
   // Provide requestId to support call level traceability.
-  public async sendMessage(messageText: string, requestId: string = ''): Promise<IAzureQueueSendResponse> {
+  public async sendMessage(messageText: string, requestId = ''): Promise<IAzureQueueSendResponse> {
     const fnName = `${moduleName}.sendMessage`;
 
     if (!this._exists) {
@@ -165,7 +165,7 @@ export class AzureQueue {
   // delayManagerConfig is an optional set of parameters to change delay properties
   // see IDelayManagerConfig, unassigned parameters are default in DelayManager constructor
   // 
-  public async waitForMessages(poisonQueueService: AzureQueue, messageHandler: Function, messageHandlerOptions: object = {}, delayManagerConfig?: IDelayManagerConfig): Promise<void> {
+  public async waitForMessages(poisonQueueService: AzureQueue, messageHandler: (messageString: string, options?: any) => string, messageHandlerOptions: object = {}, delayManagerConfig?: IDelayManagerConfig): Promise<void> {
     const fnName = `${moduleName}.waitForMessages`;
 
     if (this._exists === null) {
@@ -209,7 +209,7 @@ export class AzureQueue {
       }
 
       log.divider();
-    };
+    }
     
     this._halt = false;
   }

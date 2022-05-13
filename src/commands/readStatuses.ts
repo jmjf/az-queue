@@ -1,9 +1,6 @@
-import { QueueClient, DequeuedMessageItem, logger } from '@azure/storage-queue';
-//import { getQueueClientForReceive } from '../common/azQueueHelpers';
 import { AzureQueue } from '../lib/AzureQueue';
 import { Logger } from '../lib/Logger';
-//import { delay, getTimeout } from '../common/misc';
-import { RequestMessage, StatusMessage } from '../interfaces/queueMessages';
+import { StatusMessage } from '../interfaces/queueMessages';
 import { IProcessEnv } from '../lib/IProcessEnv';
 
 const log = new Logger();
