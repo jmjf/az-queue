@@ -1,6 +1,10 @@
 interface RequestMessage {
   requestId: string,
   requestDatetime: string,
+  // processId: string,
+  // referenceDate: string,
+  // sourcePath: string,
+  // requesterId: string,
   messageText: string
 }
 

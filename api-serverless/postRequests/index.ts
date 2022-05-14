@@ -40,11 +40,13 @@ const postRequests: AzureFunction = async function (context: Context, req: HttpR
         requestDatetime: now.toISOString(), 
         requesterId: req.body?.requesterId || ''
     };
-    const logIdentifier = `postRequests | ${message.requestId}`;
     let httpStatus = httpError; // default response is error
+
+    context.log(JSON.stringify(req.headers));
+
+    const logIdentifier = `postRequests | ${message.requestId}`;
     context.log(`INFO | ${logIdentifier} | received request`);
 
-    // If something's wrong, I want to log it without exposing the request data in the log, so this if...else structure
     if (isRequestGood(context, req, message.requestId)) {
         httpStatus = httpAccepted; // the request is good
         switch (req.body.apiVersion) {
@@ -62,7 +64,6 @@ const postRequests: AzureFunction = async function (context: Context, req: HttpR
                 break;
         }
     }
-
 
     // If we didn't get an error, add messageText and put it on the queue
     if (httpStatus === httpAccepted) {

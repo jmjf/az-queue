@@ -39,7 +39,7 @@ export async function main() {
   }
 
   program
-    .name('azure-queue-demo')
+    .name('az-queue')
     .description('demonstates sending and receiving messages with Azure Storage Queues')
     .version('0.1.0');
 
